@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export default function AssistantMessageBubble({ message }: { message: string }) {
+export default function 
+({ message }: { message: string }) {
   return (
     <div className="flex items-start gap-2 rounded-lg p-2">
       <Avatar className="mt-1">

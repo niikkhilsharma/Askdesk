@@ -1,7 +1,7 @@
 "use client"
 
-import UserMessageBubble from "@/components/widget/userMessageBubble"
-import AssistantMessageBubble from "@/components/widget/assistantMessageBubble"
+import UserMessageBubble from "@/components/widget/user-message-bubble"
+import AssistantMessageBubble from "@/components/widget/assistant-message-bubble"
 import WidgetHeader from "@/components/widget/widget-header"
 import { useChat } from "@ai-sdk/react"
 import WidgetInput from "@/components/widget/widget-input"
