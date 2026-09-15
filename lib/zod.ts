@@ -1,5 +1,7 @@
 import z, { object, string } from "zod"
 
+import { MAX_UPLOAD_BYTES } from "@/lib/knowledge-base/constants"
+
 export const signInSchema = object({
   email: z.email("Invalid email"),
   password: string({ error: "Password is required" })
@@ -40,6 +42,42 @@ export const signUpSchema = z
   })
 
 export type SignUpInput = z.infer<typeof signUpSchema>
+
+const pdfFileNameSchema = z
+  .string({ error: "File name is required" })
+  .trim()
+  .min(1, "File name is required")
+  .max(255, "File name must be less than 255 characters")
+  .refine((value) => value.toLowerCase().endsWith(".pdf"), {
+    message: "Only PDF files are allowed",
+  })
+
+export const signUploadSchema = z.object({
+  fileName: pdfFileNameSchema,
+  bytes: z
+    .number({ error: "File size is required" })
+    .int("File size must be a whole number") 
+    .positive("File size must be greater than zero")
+    .max(MAX_UPLOAD_BYTES, `File must be ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB or smaller`),
+})
+
+export const confirmUploadSchema = z.object({
+  fileName: pdfFileNameSchema,
+  publicId: z.string().min(1, "Public ID is required").max(512),
+  version: z
+    .number({ error: "Version is required" })
+    .int("Version must be a whole number")
+    .positive("Version must be greater than zero"),
+  signature: z.string().min(1, "Signature is required"),
+  secureUrl: z.url("Secure URL must be valid"),
+  bytes: z
+    .number({ error: "File size is required" })
+    .int("File size must be a whole number")
+    .positive("File size must be greater than zero"),
+})
+
+export type SignUploadInput = z.infer<typeof signUploadSchema>
+export type ConfirmUploadInput = z.infer<typeof confirmUploadSchema>
 
 export const user = z.object({
   id: z.string(),

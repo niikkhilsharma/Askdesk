@@ -6,6 +6,8 @@ import {
   Command,
   Home,
   Inbox,
+  MessageSquare,
+  PanelLeft,
   Search,
   Settings,
 } from "lucide-react"
@@ -25,6 +27,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 const items = [
@@ -32,6 +35,11 @@ const items = [
     title: "Home",
     url: "/dashboard",
     icon: Home,
+  },
+  {
+    title: "Chat",
+    url: "/dashboard/chat",
+    icon: MessageSquare,
   },
   {
     title: "Inbox",
@@ -69,6 +77,7 @@ type AppSidebarProps = {
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname()
+  const { toggleSidebar } = useSidebar()
 
   return (
     <Sidebar collapsible="icon">
@@ -113,6 +122,17 @@ export function AppSidebar({ user }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={toggleSidebar}
+              tooltip="Toggle Sidebar"
+            >
+              <PanelLeft className="rtl:rotate-180" />
+              <span>Toggle Sidebar</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />

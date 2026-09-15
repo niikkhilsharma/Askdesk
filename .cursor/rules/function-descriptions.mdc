@@ -1,0 +1,42 @@
+---
+description: Add concise 1–2 line descriptions above every function
+globs: **/*.{ts,tsx,js,jsx}
+alwaysApply: false
+---
+
+# Function Descriptions
+
+Add a short description directly above every function — including helpers, handlers, hooks, and methods. Keep it to **1–2 lines max**.
+
+## Guidelines
+
+- State **what the function does**, not how it does it
+- Use plain language; avoid jargon and implementation details
+- Skip descriptions only for trivial one-liners where the name is fully self-explanatory (e.g. `getId`)
+
+## Examples
+
+```typescript
+// ❌ BAD — missing description
+export async function uploadDocument(file: File, orgId: string) {
+  ...
+}
+
+// ❌ BAD — too long or redundant
+/** Validates the uploaded file, checks org permissions, uploads to Cloudinary, and saves metadata to the database */
+export async function uploadDocument(file: File, orgId: string) {
+  ...
+}
+
+// ✅ GOOD
+/** Uploads a document to Cloudinary and saves its metadata for the org. */
+export async function uploadDocument(file: File, orgId: string) {
+  ...
+}
+
+// ✅ GOOD — hook
+/** Returns the current upload progress and cancel handler for a file. */
+function useUploadProgress(fileId: string) {
+  ...
+}
+```
