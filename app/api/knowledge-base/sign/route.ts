@@ -1,9 +1,9 @@
 import { auth } from "@/auth"
 import {
-  apiKey,
-  apiSecret,
-  cloudinary,
-  cloudName,
+  getApiKey,
+  getApiSecret,
+  getCloudinary,
+  getCloudName,
 } from "@/lib/cloudinary"
 import { buildKnowledgeBasePublicId } from "@/lib/knowledge-base/public-id"
 import { signUploadSchema } from "@/lib/zod"
@@ -46,14 +46,14 @@ export async function POST(request: NextRequest) {
   )
   const timestamp = Math.round(Date.now() / 1000)
 
-  const signature = cloudinary.utils.api_sign_request(
+  const signature = getCloudinary().utils.api_sign_request(
     { public_id: publicId, timestamp },
-    apiSecret
+    getApiSecret()
   )
 
   return NextResponse.json({
-    cloudName,
-    apiKey,
+    cloudName: getCloudName(),
+    apiKey: getApiKey(),
     timestamp,
     publicId,
     signature,
