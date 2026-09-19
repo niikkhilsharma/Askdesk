@@ -29,7 +29,11 @@ const TIERS = [
 ] as const
 
 /** Two-tier landing pricing with the same chatbot features on Free and Standard. */
-export function LandingPricing() {
+export function LandingPricing({
+  isAuthenticated,
+}: {
+  isAuthenticated: boolean
+}) {
   return (
     <LandingSection>
       <div className="mx-auto max-w-2xl text-center">
@@ -48,6 +52,7 @@ export function LandingPricing() {
               price={tier.price}
               highlighted={tier.highlighted}
               disabled={tier.disabled}
+              isAuthenticated={isAuthenticated}
             />
           </li>
         ))}
@@ -62,11 +67,13 @@ function PricingCard({
   price,
   highlighted,
   disabled,
+  isAuthenticated,
 }: {
   name: string
   price: string
   highlighted: boolean
   disabled: boolean
+  isAuthenticated: boolean
 }) {
   return (
     <article
@@ -109,7 +116,9 @@ function PricingCard({
           className="w-full"
           asChild
         >
-          <Link href="/signup">Get started</Link>
+          <Link href={isAuthenticated ? "/dashboard" : "/signup"}>
+            {isAuthenticated ? "Dashboard" : "Get started"}
+          </Link>
         </Button>
       )}
     </article>

@@ -29,6 +29,10 @@ export default function WidgetInput({
   const emojiButtonRef = useRef<HTMLButtonElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  if (disabled && showEmojiPicker) {
+    setShowEmojiPicker(false)
+  }
+
   /** Grows or shrinks the draft field to fit its text, up to a few rows. */
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current
@@ -86,8 +90,9 @@ export default function WidgetInput({
 
   /** Sends the trimmed draft and clears the textarea. */
   const onSubmit = () => {
-    if (disabled || !input.trim()) return
-    sendMessage({ text: input })
+    const draft = input.trim()
+    if (disabled || !draft) return
+    sendMessage({ text: draft })
     setInput("")
     setShowEmojiPicker(false)
   }
@@ -135,9 +140,10 @@ export default function WidgetInput({
             >
               <EmojiPicker
                 className="rounded-lg shadow-lg"
-                onEmojiClick={(emojiData) =>
+                onEmojiClick={(emojiData) => {
+                  if (disabled) return
                   setInput((prev) => prev + emojiData.emoji)
-                }
+                }}
                 lazyLoadEmojis
                 previewConfig={{ showPreview: false }}
                 height={EMOJI_PICKER_HEIGHT}

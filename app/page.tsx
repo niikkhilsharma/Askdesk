@@ -28,7 +28,7 @@ export default async function Page() {
       <LandingSteps />
       <LandingAudiences />
       <LandingContrast />
-      <LandingPricing />
+      <LandingPricing isAuthenticated={isAuthenticated} />
       <LandingCta isAuthenticated={isAuthenticated} />
       <LandingFooter />
     </div>

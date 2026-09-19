@@ -31,6 +31,12 @@ describe("matchClinicReply", () => {
     )
   })
 
+  it("matches hours wording without treating unrelated close questions as clinic hours", () => {
+    expect(matchClinicReply("hours")).toBe(CLINIC_PRESETS[0].reply)
+    expect(matchClinicReply("When do you close?")).toBe(CLINIC_PRESETS[0].reply)
+    expect(matchClinicReply("Can you close my account?")).toBe(DEMO_FALLBACK)
+  })
+
   it("returns the fallback when nothing looks like a clinic question", () => {
     expect(matchClinicReply("Where is the nearest coffee shop?")).toBe(
       DEMO_FALLBACK

@@ -11,7 +11,15 @@ export const CLINIC_PRESETS: ClinicPreset[] = [
     question: "What are your hours?",
     reply:
       "We're open Monday–Friday 8am–6pm, and Saturday 9am–1pm. Closed Sundays.",
-    keywords: ["hour", "open", "close", "closed", "opening", "what time"],
+    keywords: [
+      "hour",
+      "open",
+      "closed",
+      "opening",
+      "what time",
+      "when do you close",
+      "closing time",
+    ],
   },
   {
     id: "walkins",
@@ -44,6 +52,14 @@ function normalizeQuestion(text: string) {
     .trim()
 }
 
+/** Returns true when the question contains the keyword as its own phrase. */
+function hasKeyword(normalized: string, keyword: string) {
+  const escaped = keyword
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\s+/g, "\\s+")
+  return new RegExp(`(?:^|\\s)${escaped}`).test(normalized)
+}
+
 /** Picks the closest canned clinic reply, or the demo fallback if nothing matches. */
 export function matchClinicReply(text: string) {
   const normalized = normalizeQuestion(text)
@@ -60,7 +76,7 @@ export function matchClinicReply(text: string) {
   for (const preset of CLINIC_PRESETS) {
     let score = 0
     for (const keyword of preset.keywords) {
-      if (normalized.includes(keyword)) score += 1
+      if (hasKeyword(normalized, keyword)) score += 1
     }
     if (score > bestScore) {
       bestScore = score
