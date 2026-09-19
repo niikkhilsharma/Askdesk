@@ -5,6 +5,7 @@ import { useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "next/navigation"
 
+/** Shows a toast when login failed, then clears the error query params. */
 export default function LoginErrorToast() {
   const searchParams = useSearchParams()
   const router = useRouter()

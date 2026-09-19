@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input"
 import { signIn } from "@/auth"
 import { AuthError } from "next-auth"
 import { redirect } from "next/navigation"
-import { ComponentProps } from "react"
+import { ComponentProps, Suspense } from "react"
 import LoginErrorToast from "./login-error-toast"
 
 type LoginFormProps = Omit<ComponentProps<"form">, "action">
 
+/** Renders the credentials login form and any sign-in error toast. */
 export function LoginForm({ className, ...props }: LoginFormProps) {
   return (
     <>
@@ -92,7 +93,9 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         </FieldGroup>
       </form>
 
-      <LoginErrorToast />
+      <Suspense fallback={null}>
+        <LoginErrorToast />
+      </Suspense>
     </>
   )
 }
