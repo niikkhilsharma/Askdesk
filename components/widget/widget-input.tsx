@@ -7,20 +7,21 @@ import { Button } from "@/components/ui/button"
 import EmojiPicker from "emoji-picker-react"
 import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
-import type { UseChatHelpers } from "@ai-sdk/react"
-import type { UIMessage } from "ai"
 
 const EMOJI_PICKER_HEIGHT = 350
 const EMOJI_PICKER_GAP = 8
 const MAX_TEXTAREA_ROWS = 4
 const MIN_TEXTAREA_HEIGHT = 48
 
+/** Composer with textarea, emoji picker, and send — used by the live widget and the landing preview. */
 export default function WidgetInput({
   sendMessage,
   className,
+  disabled = false,
 }: {
-  sendMessage: UseChatHelpers<UIMessage>["sendMessage"]
+  sendMessage: (message: { text: string }) => void
   className?: string
+  disabled?: boolean
 }) {
   const [input, setInput] = useState<string>("")
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false)
@@ -28,6 +29,7 @@ export default function WidgetInput({
   const emojiButtonRef = useRef<HTMLButtonElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  /** Grows or shrinks the draft field to fit its text, up to a few rows. */
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current
     if (!textarea) return
@@ -60,6 +62,7 @@ export default function WidgetInput({
   useLayoutEffect(() => {
     if (!showEmojiPicker || !emojiButtonRef.current) return
 
+    /** Places the emoji picker just above the smile button. */
     const updatePosition = () => {
       if (!emojiButtonRef.current) return
 
@@ -81,10 +84,12 @@ export default function WidgetInput({
     }
   }, [showEmojiPicker])
 
+  /** Sends the trimmed draft and clears the textarea. */
   const onSubmit = () => {
-    if (!input.trim()) return
+    if (disabled || !input.trim()) return
     sendMessage({ text: input })
     setInput("")
+    setShowEmojiPicker(false)
   }
 
   return (
@@ -94,6 +99,8 @@ export default function WidgetInput({
           ref={textareaRef}
           placeholder="Type here..."
           rows={1}
+          disabled={disabled}
+          aria-label="Message"
           className="min-h-12 max-h-none flex-1 resize-none rounded-lg border-border bg-background py-3 [field-sizing:fixed]"
           onChange={(e) => setInput(e.target.value)}
           value={input}
@@ -111,6 +118,7 @@ export default function WidgetInput({
           size="icon"
           variant="secondary"
           className="size-12 shrink-0"
+          disabled={disabled}
           onClick={() => setShowEmojiPicker((prev) => !prev)}
         >
           {showEmojiPicker ? <XIcon /> : <Smile />}
@@ -143,6 +151,8 @@ export default function WidgetInput({
           variant="default"
           size="icon"
           className="size-12 shrink-0"
+          disabled={disabled}
+          aria-label="Send message"
           onClick={onSubmit}
         >
           <Send />

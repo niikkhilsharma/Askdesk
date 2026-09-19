@@ -1,56 +1,36 @@
-import { Button } from "@/components/ui/button"
-import { auth } from "@/auth"
-import Link from "next/link"
+import type { Metadata } from "next"
 
+import { auth } from "@/auth"
+import { LandingAudiences } from "@/components/landing/landing-audiences"
+import { LandingContrast } from "@/components/landing/landing-contrast"
+import { LandingCta } from "@/components/landing/landing-cta"
+import { LandingFooter } from "@/components/landing/landing-footer"
+import { LandingHeader } from "@/components/landing/landing-header"
+import { LandingHero } from "@/components/landing/landing-hero"
+import { LandingPricing } from "@/components/landing/landing-pricing"
+import { LandingSteps } from "@/components/landing/landing-steps"
+
+export const metadata: Metadata = {
+  title: "Emerald AI — A chatbot for your website",
+  description:
+    "Add it in minutes. Visitors ask the same questions they email you — hours, pricing, policies — and the bot answers on your site, so your team does not have to.",
+}
+
+/** Public Emerald AI marketing homepage with a scripted clinic-site preview. */
 export default async function Page() {
   const session = await auth()
+  const isAuthenticated = Boolean(session?.user)
 
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        {session?.user ? (
-          <>
-            <div>
-              <h1 className="text-2xl font-semibold">
-                Welcome, {session.user.fullName ?? "User"} 👋
-              </h1>
-
-              <div className="mt-4 space-y-2 rounded-lg border p-4">
-                <p>
-                  <span className="font-medium">Name:</span>{" "}
-                  {session.user.fullName ?? "N/A"}
-                </p>
-
-                <p>
-                  <span className="font-medium">Email:</span>{" "}
-                  {session.user.email ?? "N/A"}
-                </p>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-2xl font-semibold">Welcome!</h1>
-              <p>Please log in or create an account to continue.</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button asChild>
-                <Link href="/login">Login</Link>
-              </Button>
-
-              <Button variant="outline" asChild>
-                <Link href="/signup">Sign Up</Link>
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
+    <div className="min-h-svh bg-background">
+      <LandingHeader isAuthenticated={isAuthenticated} />
+      <LandingHero isAuthenticated={isAuthenticated} />
+      <LandingSteps />
+      <LandingAudiences />
+      <LandingContrast />
+      <LandingPricing />
+      <LandingCta isAuthenticated={isAuthenticated} />
+      <LandingFooter />
     </div>
   )
 }
