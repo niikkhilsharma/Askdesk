@@ -15,20 +15,12 @@ function requireEnv(name: string): string {
   return value
 }
 
-let configured = false
-
-/** Configures the Cloudinary SDK the first time upload or sign code needs it. */
-function ensureCloudinaryConfig() {
-  if (configured) return
-
-  cloudinary.config({
-    cloud_name: requireEnv("CLOUDINARY_CLOUD_NAME"),
-    api_key: requireEnv("CLOUDINARY_API_KEY"),
-    api_secret: requireEnv("CLOUDINARY_API_SECRET"),
-    secure: true,
-  })
-  configured = true
-}
+cloudinary.config({
+  cloud_name: requireEnv("CLOUDINARY_CLOUD_NAME"),
+  api_key: requireEnv("CLOUDINARY_API_KEY"),
+  api_secret: requireEnv("CLOUDINARY_API_SECRET"),
+  secure: true,
+})
 
 /** Cloudinary cloud name from the environment. */
 export function getCloudName() {
@@ -45,10 +37,4 @@ export function getApiSecret() {
   return requireEnv("CLOUDINARY_API_SECRET")
 }
 
-/** Returns the Cloudinary SDK after applying environment credentials. */
-export function getCloudinary() {
-  ensureCloudinaryConfig()
-  return cloudinary
-}
-
-export { KNOWLEDGE_BASE_FOLDER, MAX_UPLOAD_BYTES }
+export { cloudinary, KNOWLEDGE_BASE_FOLDER, MAX_UPLOAD_BYTES }

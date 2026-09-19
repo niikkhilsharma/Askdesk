@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import db from "@/db/db"
 import { documentsTable } from "@/db/schema"
-import { getApiSecret, getCloudinary } from "@/lib/cloudinary"
+import { cloudinary, getApiSecret } from "@/lib/cloudinary"
 import { ingestDocument } from "@/lib/knowledge-base/ingest"
 import { isOwnedKnowledgeBasePublicId } from "@/lib/knowledge-base/public-id"
 import { confirmUploadSchema } from "@/lib/zod"
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   const { fileName, publicId, version, signature, secureUrl, bytes } =
     validationResult.data
 
-  const expectedSignature = getCloudinary().utils.api_sign_request(
+  const expectedSignature = cloudinary.utils.api_sign_request(
     { public_id: publicId, version },
     getApiSecret()
   )

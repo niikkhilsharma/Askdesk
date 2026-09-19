@@ -12,19 +12,18 @@ describe("cloudinary env helpers", () => {
     process.env = ORIGINAL_ENV
   })
 
-  it("reads Cloudinary credentials from the environment", async () => {
+  it("configures Cloudinary from the environment at import", async () => {
     process.env.CLOUDINARY_CLOUD_NAME = "demo-cloud"
     process.env.CLOUDINARY_API_KEY = "demo-key"
     process.env.CLOUDINARY_API_SECRET = "demo-secret"
 
-    const { getApiKey, getApiSecret, getCloudName, getCloudinary } =
+    const { cloudinary, getApiKey, getApiSecret, getCloudName } =
       await import("@/lib/cloudinary")
 
     expect(getCloudName()).toBe("demo-cloud")
     expect(getApiKey()).toBe("demo-key")
     expect(getApiSecret()).toBe("demo-secret")
-    expect(getCloudinary().config().cloud_name).toBe("demo-cloud")
-    expect(getCloudinary().config().cloud_name).toBe("demo-cloud")
+    expect(cloudinary.config().cloud_name).toBe("demo-cloud")
   })
 
   it("throws when a required Cloudinary variable is missing", async () => {
@@ -32,8 +31,8 @@ describe("cloudinary env helpers", () => {
     process.env.CLOUDINARY_API_KEY = "demo-key"
     process.env.CLOUDINARY_API_SECRET = "demo-secret"
 
-    const { getCloudName } = await import("@/lib/cloudinary")
-
-    expect(() => getCloudName()).toThrow("Missing CLOUDINARY_CLOUD_NAME")
+    await expect(import("@/lib/cloudinary")).rejects.toThrow(
+      "Missing CLOUDINARY_CLOUD_NAME"
+    )
   })
 })

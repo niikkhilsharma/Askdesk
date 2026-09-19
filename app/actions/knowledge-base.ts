@@ -3,7 +3,7 @@
 import { auth } from "@/auth"
 import db from "@/db/db"
 import { documentsTable } from "@/db/schema"
-import { getCloudinary } from "@/lib/cloudinary"
+import { cloudinary } from "@/lib/cloudinary"
 import { ingestDocument } from "@/lib/knowledge-base/ingest"
 import { deleteDocumentVectors } from "@/lib/pinecone"
 import { and, eq } from "drizzle-orm"
@@ -49,7 +49,7 @@ export async function deleteDocumentAction(formData: FormData) {
     })
   }
 
-  await getCloudinary().uploader.destroy(document.publicId, {
+  await cloudinary.uploader.destroy(document.publicId, {
     resource_type: "raw",
   })
 
