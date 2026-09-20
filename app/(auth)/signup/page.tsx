@@ -4,6 +4,7 @@ import { SignupForm } from "@/components/auth/signup-form"
 import Image from "next/image"
 import Link from "next/link"
 
+/** Renders the signup page with the credentials form. */
 export default function SignupPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -13,7 +14,7 @@ export default function SignupPage() {
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <GalleryVerticalEnd className="size-4" />
             </div>
-            Emerald AI
+            Askdesk
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">

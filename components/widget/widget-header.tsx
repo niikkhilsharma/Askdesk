@@ -9,10 +9,10 @@ export default function WidgetHeader() {
         <div className="flex items-center justify-between px-2 py-4">
           <div className="flex items-center gap-2">
             <Avatar>
-              <AvatarImage src="https://emerald-ai.com/logo.png" />
-              <AvatarFallback>V</AvatarFallback>
+              <AvatarImage src="https://askdesk.com/logo.png" />
+              <AvatarFallback>A</AvatarFallback>
             </Avatar>
-            <p className="font-medium text-card-foreground">Emerald AI</p>
+            <p className="font-medium text-card-foreground">Askdesk</p>
           </div>
 
           <Button variant="ghost" size="icon">

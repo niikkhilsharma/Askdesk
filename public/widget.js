@@ -19,11 +19,11 @@
     const agentId = scriptElement?.getAttribute("data-agent-id")
 
     if (!agentId) {
-      console.error("[Emerald AI] Missing data-agent-id in script tag.")
+      console.error("[Askdesk] Missing data-agent-id in script tag.")
       return
     }
 
-    const existingWidget = document.getElementById("emerald-ai-chatbot-iframe")
+    const existingWidget = document.getElementById("askdesk-chatbot-iframe")
 
     if (existingWidget) {
       return
@@ -32,7 +32,7 @@
     const baseUrl = getWidgetBaseUrl()
 
     const iframe = document.createElement("iframe")
-    iframe.id = "emerald-ai-chatbot-iframe"
+    iframe.id = "askdesk-chatbot-iframe"
 
     iframe.src = `${baseUrl}/widget?agentId=${encodeURIComponent(agentId)}`
 
@@ -47,7 +47,7 @@
     iframe.style.boxShadow = "0 8px 30px rgba(0, 0, 0, 0.18)"
     iframe.style.background = "transparent"
 
-    iframe.setAttribute("title", "Emerald AI Chatbot")
+    iframe.setAttribute("title", "Askdesk Chatbot")
     iframe.setAttribute("allow", "clipboard-write")
 
     document.body.appendChild(iframe)
