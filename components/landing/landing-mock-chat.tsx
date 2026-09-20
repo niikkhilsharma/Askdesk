@@ -8,7 +8,7 @@ import {
   matchClinicReply,
   type ClinicPreset,
 } from "@/components/landing/mock-chat-script"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import AssistantMessageBubble from "@/components/widget/assistant-message-bubble"
 import UserMessageBubble from "@/components/widget/user-message-bubble"
 import WidgetInput from "@/components/widget/widget-input"
@@ -61,7 +61,6 @@ function TypingIndicator() {
   return (
     <div className="flex items-start gap-2 rounded-lg p-2">
       <Avatar className="mt-1">
-        <AvatarImage src="https://askdesk.com/logo.png" />
         <AvatarFallback>RC</AvatarFallback>
       </Avatar>
       <div className="rounded-lg bg-muted p-2">
@@ -200,7 +199,6 @@ export function LandingMockChat() {
         <div className="sticky top-0 z-10 border-b bg-card">
           <div className="flex items-center gap-2 px-2 py-4">
             <Avatar>
-              <AvatarImage src="https://askdesk.com/logo.png" />
               <AvatarFallback>RC</AvatarFallback>
             </Avatar>
             <p className="font-medium text-card-foreground">Riverside Clinic</p>
