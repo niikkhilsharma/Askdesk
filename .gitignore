@@ -10,6 +10,7 @@
 
 # testing
 /coverage
+coverage
 
 # next.js
 /.next/
@@ -34,3 +35,5 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.vercel
+.env*

@@ -1,15 +1,16 @@
 import { auth } from "@/auth"
 import {
-  apiKey,
-  apiSecret,
   cloudinary,
-  cloudName,
+  getApiKey,
+  getApiSecret,
+  getCloudName,
 } from "@/lib/cloudinary"
 import { buildKnowledgeBasePublicId } from "@/lib/knowledge-base/public-id"
 import { signUploadSchema } from "@/lib/zod"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
+/** Returns a signed Cloudinary upload payload for the current user. */
 export async function POST(request: NextRequest) {
   const session = await auth()
 
@@ -48,12 +49,12 @@ export async function POST(request: NextRequest) {
 
   const signature = cloudinary.utils.api_sign_request(
     { public_id: publicId, timestamp },
-    apiSecret
+    getApiSecret()
   )
 
   return NextResponse.json({
-    cloudName,
-    apiKey,
+    cloudName: getCloudName(),
+    apiKey: getApiKey(),
     timestamp,
     publicId,
     signature,
