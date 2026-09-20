@@ -10,7 +10,7 @@ Never push commits directly to `main`. “Push” in this repo means: create a b
 When the user says **push** (or similar):
 
 1. Create a feature branch if we are on `main`.
-2. Commit only if they asked to commit, or if there are already commits to send.
+2. If there are uncommitted changes, commit them on that branch — that is what “push the changes” means. If the tree is already clean, push the existing commits.
 3. Push the feature branch — never `main`.
 4. Open a pull request with `gh pr create`.
 5. Stay on that PR until it is merge-ready: watch comments and pipelines.
