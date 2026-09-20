@@ -1,0 +1,26 @@
+---
+description: Branch + PR instead of pushing to main; then watch review comments and fix failing CI
+alwaysApply: true
+---
+
+# Git: branch + PR instead of pushing to main
+
+Never push commits directly to `main`. “Push” in this repo means: create a branch, push that branch, and open a PR.
+
+When the user says **push** (or similar):
+
+1. Create a feature branch if we are on `main`.
+2. If there are uncommitted changes, commit them on that branch — that is what “push the changes” means. If the tree is already clean, push the existing commits.
+3. Push the feature branch — never `main`.
+4. Open a pull request with `gh pr create`.
+5. Stay on that PR until it is merge-ready: watch comments and pipelines.
+
+## After the PR is open
+
+Do not stop at “PR created.” Immediately watch review comments and CI, and keep looping until both are clean.
+
+- **Comments:** `gh api` / `gh pr view` for review threads. Fix real issues in the PR’s scope, reply on the thread, and resolve it. If a comment is out of scope or needs a product/security decision, ask the user — do not guess.
+- **Pipelines:** `gh pr checks` (use `--watch` while they are still running). If a check fails, read the log, fix the failure, push the feature branch, and re-watch. Do not change CI config just to make a check pass.
+- **Conflicts:** if the PR is unmergeable, merge the latest `main` into the feature branch and resolve.
+
+Never merge the PR or enable auto-merge unless the user asks. Never force-push. Never push to `main`.
