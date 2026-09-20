@@ -1,7 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
+/** Chat widget header with the Askdesk name and a close control. */
 export default function WidgetHeader() {
   return (
     <>
@@ -9,10 +10,9 @@ export default function WidgetHeader() {
         <div className="flex items-center justify-between px-2 py-4">
           <div className="flex items-center gap-2">
             <Avatar>
-              <AvatarImage src="https://emerald-ai.com/logo.png" />
-              <AvatarFallback>V</AvatarFallback>
+              <AvatarFallback>A</AvatarFallback>
             </Avatar>
-            <p className="font-medium text-card-foreground">Emerald AI</p>
+            <p className="font-medium text-card-foreground">Askdesk</p>
           </div>
 
           <Button variant="ghost" size="icon">

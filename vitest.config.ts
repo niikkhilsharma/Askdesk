@@ -18,6 +18,7 @@ export default defineConfig({
       include: [
         "components/landing/mock-chat-script.ts",
         "lib/cloudinary.ts",
+        "public/widget.js",
       ],
     },
   },
