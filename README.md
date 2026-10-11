@@ -1,8 +1,8 @@
-# Emerald AI
+# Askdesk
 
 **A chatbot for your website. Your customers get answers.**
 
-Emerald AI is a small product for businesses that keep answering the same questions over email: hours, pricing, insurance, house rules, how to get started. You add a chat widget to your site, train it with your own files, and visitors get those answers on the page instead of waiting on your team.
+Askdesk is a small product for businesses that keep answering the same questions over email: hours, pricing, insurance, house rules, how to get started. You add a chat widget to your site, train it with your own files, and visitors get those answers on the page instead of waiting on your team.
 
 It is not a generic ChatGPT tab, not a six-week custom build, and not a full support suite. It is a chatbot on *their* site, for *their* customers.
 

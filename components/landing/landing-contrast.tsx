@@ -6,7 +6,7 @@ const CONTRAST_NOTS = [
   "Not a heavy support suite.",
 ]
 
-/** Positions Emerald AI against generic chat, custom builds, and heavy suites. */
+/** Positions Askdesk against generic chat, custom builds, and heavy suites. */
 export function LandingContrast() {
   return (
     <LandingSection className="bg-muted/40">

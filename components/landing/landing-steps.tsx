@@ -20,7 +20,7 @@ const STEPS = [
   },
 ]
 
-/** Three-step overview of how Emerald AI is added and used. */
+/** Three-step overview of how Askdesk is added and used. */
 export function LandingSteps() {
   return (
     <LandingSection className="bg-muted/40">

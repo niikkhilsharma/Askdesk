@@ -11,12 +11,12 @@ import { LandingPricing } from "@/components/landing/landing-pricing"
 import { LandingSteps } from "@/components/landing/landing-steps"
 
 export const metadata: Metadata = {
-  title: "Emerald AI — A chatbot for your website",
+  title: "Askdesk — A chatbot for your website",
   description:
     "Add it in minutes. Visitors ask the same questions they email you — hours, pricing, policies — and the bot answers on your site, so your team does not have to.",
 }
 
-/** Public Emerald AI marketing homepage with a scripted clinic-site preview. */
+/** Public Askdesk marketing homepage with a scripted clinic-site preview. */
 export default async function Page() {
   const session = await auth()
   const isAuthenticated = Boolean(session?.user)

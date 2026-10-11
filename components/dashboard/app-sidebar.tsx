@@ -75,6 +75,7 @@ type AppSidebarProps = {
   }
 }
 
+/** Dashboard sidebar with Askdesk branding and primary app navigation. */
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname()
   const { toggleSidebar } = useSidebar()
@@ -90,7 +91,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-start text-sm leading-tight">
-                  <span className="truncate font-medium">Chatbot</span>
+                  <span className="truncate font-medium">Askdesk</span>
                   <span className="truncate text-xs">Dashboard</span>
                 </div>
               </Link>
