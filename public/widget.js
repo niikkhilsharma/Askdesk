@@ -65,6 +65,18 @@
     iframe.setAttribute("referrerpolicy", "origin")
 
     document.body.appendChild(iframe)
+
+    /** Removes the iframe when the chat asks the host page to close it. */
+    function onCloseMessage(event) {
+      if (event.origin !== baseUrl) return
+      if (!event.data || event.data.type !== "askdesk:close") return
+      if (event.source !== iframe.contentWindow) return
+
+      iframe.remove()
+      window.removeEventListener("message", onCloseMessage)
+    }
+
+    window.addEventListener("message", onCloseMessage)
   }
 
   if (document.readyState === "loading") {

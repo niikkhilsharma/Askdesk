@@ -132,7 +132,7 @@ describe("backfillBots", () => {
 
   it("creates a bot only for accounts that do not have one", async () => {
     const created = { ...bot, id: 8, userId: 2, publicId: "bot_created" }
-    steps.push([{ id: 1 }, { id: 2 }], [{ id: 9 }], [], [], [created])
+    steps.push([{ id: 1 }, { id: 2 }], [{ userId: 1 }], [], [created])
 
     await expect(backfillBots()).resolves.toEqual({ accounts: 2, created: 1 })
   })

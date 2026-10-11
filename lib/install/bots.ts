@@ -62,17 +62,15 @@ export async function getInstallState(userId: number) {
 
 /** Creates a bot for every account that does not have one yet. */
 export async function backfillBots() {
-  const users = await db.select({ id: usersTable.id }).from(usersTable)
+  const [users, existingBots] = await Promise.all([
+    db.select({ id: usersTable.id }).from(usersTable),
+    db.select({ userId: botsTable.userId }).from(botsTable),
+  ])
+  const accountsWithBots = new Set(existingBots.map((row) => row.userId))
   let created = 0
 
   for (const user of users) {
-    const [existing] = await db
-      .select({ id: botsTable.id })
-      .from(botsTable)
-      .where(eq(botsTable.userId, user.id))
-      .limit(1)
-
-    if (existing) {
+    if (accountsWithBots.has(user.id)) {
       continue
     }
 

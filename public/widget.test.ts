@@ -12,6 +12,8 @@ function fakeDocument({
     id: "",
     src: "",
     style: {} as Record<string, string>,
+    contentWindow: {},
+    remove: vi.fn(),
     setAttribute: vi.fn(),
   }
   const appendChild = vi.fn()
@@ -54,9 +56,37 @@ async function loadWidgetScript() {
 }
 
 describe("Askdesk widget loader", () => {
+  const messageHandlers: Array<
+    (event: { origin: string; data: unknown; source: unknown }) => void
+  > = []
+
   beforeEach(() => {
+    messageHandlers.length = 0
     vi.resetModules()
     vi.unstubAllGlobals()
+    vi.stubGlobal("window", {
+      addEventListener(
+        _type: string,
+        handler: (event: {
+          origin: string
+          data: unknown
+          source: unknown
+        }) => void
+      ) {
+        messageHandlers.push(handler)
+      },
+      removeEventListener(
+        _type: string,
+        handler: (event: {
+          origin: string
+          data: unknown
+          source: unknown
+        }) => void
+      ) {
+        const index = messageHandlers.indexOf(handler)
+        if (index >= 0) messageHandlers.splice(index, 1)
+      },
+    })
   })
 
   it("logs and skips mounting when data-bot-id is missing", async () => {
@@ -100,6 +130,39 @@ describe("Askdesk widget loader", () => {
     expect(iframe.setAttribute).toHaveBeenCalledWith("title", "Askdesk Chatbot")
     expect(iframe.setAttribute).toHaveBeenCalledWith("referrerpolicy", "origin")
     expect(appendChild).toHaveBeenCalledWith(iframe)
+  })
+
+  it("removes the iframe only for a close message from that frame", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    const { iframe, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    const onClose = messageHandlers[0]
+    onClose({
+      origin: "https://evil.example",
+      data: { type: "askdesk:close" },
+      source: iframe.contentWindow,
+    })
+    onClose({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:close" },
+      source: {},
+    })
+    expect(iframe.remove).not.toHaveBeenCalled()
+
+    onClose({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:close" },
+      source: iframe.contentWindow,
+    })
+    expect(iframe.remove).toHaveBeenCalledOnce()
+    expect(messageHandlers).toEqual([])
   })
 
   it("does not mount an iframe when the placement check cannot be reached", async () => {
