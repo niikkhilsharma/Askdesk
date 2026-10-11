@@ -22,11 +22,10 @@ export function originFromRequestHeaders(headerList: {
     .get("x-forwarded-proto")
     ?.split(",")[0]
     ?.trim()
+  const hostname = host.split(":")[0]
   const proto =
     forwardedProto ||
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1")
-      ? "http"
-      : "https")
+    (hostname === "localhost" || hostname === "127.0.0.1" ? "http" : "https")
 
   return `${proto}://${host}`
 }

@@ -43,6 +43,14 @@ describe("parseHostSiteOrigin", () => {
     })
   })
 
+  it("rejects an origin longer than the stored column", () => {
+    const host = `${"a".repeat(250)}.example`
+    expect(parseHostSiteOrigin(`https://${host}/contact`)).toEqual({
+      ok: false,
+      message: "That site address is too long.",
+    })
+  })
+
   it("rejects an empty address, a broken URL, and embedded credentials", () => {
     expect(parseHostSiteOrigin("  ").ok).toBe(false)
     expect(parseHostSiteOrigin("http://").ok).toBe(false)
@@ -136,6 +144,16 @@ describe("install snippet", () => {
         },
       })
     ).toBe("https://askdesk.example")
+  })
+
+  it("does not treat a public host that starts with localhost as local", () => {
+    expect(
+      originFromRequestHeaders({
+        get(name) {
+          return name === "host" ? "localhost.example.com" : null
+        },
+      })
+    ).toBe("https://localhost.example.com")
   })
 
   it("uses https for a public host when no proto is forwarded", () => {

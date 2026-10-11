@@ -36,6 +36,10 @@ export function parseHostSiteOrigin(input: string): OriginParseResult {
     }
   }
 
+  if (url.origin.length > 255) {
+    return { ok: false, message: "That site address is too long." }
+  }
+
   return { ok: true, origin: url.origin }
 }
 
