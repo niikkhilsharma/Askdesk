@@ -3,6 +3,7 @@
 import {
   BookOpen,
   Calendar,
+  Code,
   Command,
   Home,
   Inbox,
@@ -35,6 +36,11 @@ const items = [
     title: "Home",
     url: "/dashboard",
     icon: Home,
+  },
+  {
+    title: "Install",
+    url: "/dashboard/install",
+    icon: Code,
   },
   {
     title: "Chat",
@@ -125,10 +131,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={toggleSidebar}
-              tooltip="Toggle Sidebar"
-            >
+            <SidebarMenuButton onClick={toggleSidebar} tooltip="Toggle Sidebar">
               <PanelLeft className="rtl:rotate-180" />
               <span>Toggle Sidebar</span>
             </SidebarMenuButton>
