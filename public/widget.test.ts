@@ -102,6 +102,20 @@ describe("Askdesk widget loader", () => {
     expect(appendChild).toHaveBeenCalledWith(iframe)
   })
 
+  it("does not mount an iframe when the placement check cannot be reached", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error("network"))
+    const { appendChild, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(appendChild).not.toHaveBeenCalled()
+  })
+
   it("does not mount an iframe when the page is not allowed", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: false })
     const { appendChild, document } = fakeDocument({ botId: "bot_123" })
@@ -132,5 +146,50 @@ describe("Askdesk widget loader", () => {
 
     expect(fetchMock).not.toHaveBeenCalled()
     expect(appendChild).not.toHaveBeenCalled()
+  })
+
+  it("waits for the document when the script runs before it is ready", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
+    const { document } = fakeDocument({ botId: "bot_123" })
+    document.readyState = "loading"
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+
+    expect(document.addEventListener).toHaveBeenCalledWith(
+      "DOMContentLoaded",
+      expect.any(Function)
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+
+    const onReady = document.addEventListener.mock.calls[0][1] as () => void
+    onReady()
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalled()
+  })
+
+  it("falls back when the script address is missing", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
+    const document = fakeDocument({ botId: "bot_123" }).document
+    document.currentScript = {
+      getAttribute(name: string) {
+        return name === "data-bot-id" ? "bot_123" : null
+      },
+    }
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://mydomain.com/api/widget/placement?botId=bot_123"
+    )
   })
 })

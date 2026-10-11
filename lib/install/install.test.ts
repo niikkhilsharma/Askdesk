@@ -6,7 +6,11 @@ import {
   parentOriginFromFetchHeaders,
   parseHostSiteOrigin,
 } from "@/lib/install/origin"
-import { buildInstallSnippet } from "@/lib/install/snippet"
+import {
+  buildInstallSnippet,
+  originFromRequestHeaders,
+} from "@/lib/install/snippet"
+import { botsTable, hostSitesTable } from "@/db/schema"
 
 describe("parseHostSiteOrigin", () => {
   it("stores the origin and drops the path", () => {
@@ -37,6 +41,14 @@ describe("parseHostSiteOrigin", () => {
       ok: false,
       message: "Include https:// so the site address is exact.",
     })
+  })
+
+  it("rejects an empty address, a broken URL, and embedded credentials", () => {
+    expect(parseHostSiteOrigin("  ").ok).toBe(false)
+    expect(parseHostSiteOrigin("http://").ok).toBe(false)
+    expect(parseHostSiteOrigin("https://user:pass@www.oakclinic.com").ok).toBe(
+      false
+    )
   })
 
   it("rejects a non-http scheme", () => {
@@ -81,6 +93,16 @@ describe("parentOriginFromFetchHeaders", () => {
     ).toBe("http://localhost:3000")
   })
 
+  it("ignores the string null Origin", () => {
+    expect(
+      parentOriginFromFetchHeaders({
+        get(name) {
+          return name === "origin" ? "null" : null
+        },
+      })
+    ).toBeNull()
+  })
+
   it("ignores a missing Origin on a cross-site request", () => {
     expect(
       parentOriginFromFetchHeaders({
@@ -104,10 +126,67 @@ describe("install snippet", () => {
 ></script>`)
   })
 
+  it("reads the app origin from forwarded headers", () => {
+    expect(
+      originFromRequestHeaders({
+        get(name) {
+          if (name === "x-forwarded-host") return "askdesk.example, proxy"
+          if (name === "x-forwarded-proto") return "https"
+          return null
+        },
+      })
+    ).toBe("https://askdesk.example")
+  })
+
+  it("uses https for a public host when no proto is forwarded", () => {
+    expect(
+      originFromRequestHeaders({
+        get(name) {
+          return name === "host" ? "askdesk.example" : null
+        },
+      })
+    ).toBe("https://askdesk.example")
+  })
+
+  it("uses http for a loopback address when no proto is forwarded", () => {
+    expect(
+      originFromRequestHeaders({
+        get(name) {
+          return name === "host" ? "127.0.0.1:3000" : null
+        },
+      })
+    ).toBe("http://127.0.0.1:3000")
+  })
+
+  it("uses http for localhost when no proto is forwarded", () => {
+    expect(
+      originFromRequestHeaders({
+        get(name) {
+          return name === "host" ? "localhost:3000" : null
+        },
+      })
+    ).toBe("http://localhost:3000")
+  })
+
+  it("rejects a request with no host", () => {
+    expect(() =>
+      originFromRequestHeaders({
+        get() {
+          return null
+        },
+      })
+    ).toThrow("Missing host")
+  })
+
   it("creates an unguessable public id", () => {
     const publicId = createBotPublicId()
 
     expect(publicId).toMatch(/^bot_[A-Za-z0-9_-]{22}$/)
     expect(createBotPublicId()).not.toBe(publicId)
+  })
+
+  it("defines the bot and host-site tables", () => {
+    expect(botsTable).toBeDefined()
+    expect(hostSitesTable).toBeDefined()
   })
 })
