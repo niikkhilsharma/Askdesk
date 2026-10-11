@@ -55,7 +55,8 @@ A Next.js app that is both the product site and the product:
 | Sign up / log in | `/signup`, `/login` | Business owners |
 | Knowledge base | `/dashboard/knowledge-base` | Owners uploading PDFs |
 | Internal chat | `/dashboard/chat` | Owners testing answers |
-| Widget UI | `/widget` | Loaded inside the iframe on a customer site |
+| Install | `/dashboard/install` | Owners copying the snippet and naming host sites |
+| Widget UI | `/widget` | Loaded inside the iframe on an allowed host site |
 
 ## How a question gets answered
 
@@ -86,13 +87,13 @@ On a host site (see `public/test-site.html` for a local stand-in):
 <script
   async
   src="http://localhost:3000/widget.js"
-  data-agent-id="your-agent-id"
+  data-bot-id="your-bot-id"
 ></script>
 ```
 
-The loader reads its own origin, requires `data-agent-id`, and mounts a fixed iframe pointing at `/widget`. The iframe choice is documented in [`architecture/ADR-001-iframe-vs-div.md`](architecture/ADR-001-iframe-vs-div.md): CSS and JS isolation on websites we do not control.
+The account copies that snippet from **Install**. The loader reads its own origin, requires `data-bot-id`, and asks Askdesk whether the parent page's origin is one of the account's host sites. Only then does it mount a fixed iframe pointing at `/widget`. The iframe choice is documented in [`architecture/ADR-001-iframe-vs-div.md`](architecture/ADR-001-iframe-vs-div.md): CSS and JS isolation on websites we do not control.
 
-Chat against indexed documents currently runs through the signed-in dashboard. The public widget shell is in place; wiring anonymous visitors to a specific owner’s knowledge base (via `agentId`) is the next product step.
+A copied snippet does not run on a site the account has not named. On an allowed host site the shell loads and says answers are not live yet. Chat against indexed documents still runs through the signed-in dashboard. Wiring visitors on the host site to that knowledge base is the next product step.
 
 ## Stack
 
@@ -163,7 +164,6 @@ npm test
 
 The core loop — account, PDF knowledge base, grounded chat — works for the owner. Still to build for the public product:
 
-- Visitor chat on the embed, scoped to an owner by `agentId`
-- A dashboard snippet so owners can copy the script tag
+- Visitor chat on the embed, scoped to the bot and its allowed host sites
 - Paid plan (Standard is on the landing page as coming soon)
 - More than PDFs, plus caching and load testing as traffic grows
