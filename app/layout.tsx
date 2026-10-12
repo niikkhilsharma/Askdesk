@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { Analytics } from "@vercel/analytics/next"
 
 const ralewayHeading = Raleway({
   subsets: ["latin"],
@@ -42,6 +43,7 @@ export default function RootLayout({
           </TooltipProvider>
           <Toaster />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
