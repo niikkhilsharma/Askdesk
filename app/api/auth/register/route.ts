@@ -5,7 +5,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import db from "@/db/db"
 import { usersTable } from "@/db/schema"
+import { ensureBotForUser } from "@/lib/install/bots"
 import { saltAndHashPassword } from "@/utils/auth/auth"
+import { eq } from "drizzle-orm"
 
 function getDatabaseErrorCode(error: unknown): string | undefined {
   if (typeof error !== "object" || error === null) {
@@ -57,11 +59,21 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await saltAndHashPassword(password)
 
-    await db.insert(usersTable).values({
-      fullName,
-      email,
-      passwordHash,
-    })
+    const [user] = await db
+      .insert(usersTable)
+      .values({
+        fullName,
+        email,
+        passwordHash,
+      })
+      .returning({ id: usersTable.id })
+
+    try {
+      await ensureBotForUser(user.id)
+    } catch (error) {
+      await db.delete(usersTable).where(eq(usersTable.id, user.id))
+      throw error
+    }
 
     return NextResponse.json(
       {

@@ -2,16 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 /** Builds a fake host-page document for the embed loader. */
 function fakeDocument({
-  agentId,
+  botId,
   existingWidget = null,
 }: {
-  agentId: string | null
+  botId: string | null
   existingWidget?: { id: string } | null
 }) {
   const iframe = {
     id: "",
     src: "",
     style: {} as Record<string, string>,
+    contentWindow: {},
+    remove: vi.fn(),
     setAttribute: vi.fn(),
   }
   const appendChild = vi.fn()
@@ -25,8 +27,8 @@ function fakeDocument({
           if (name === "src") {
             return "http://localhost:3000/widget.js"
           }
-          if (name === "data-agent-id") {
-            return agentId
+          if (name === "data-bot-id") {
+            return botId
           }
           return null
         },
@@ -42,56 +44,215 @@ function fakeDocument({
   }
 }
 
+/** Lets the loader finish its placement check. */
+async function flushLoader() {
+  await new Promise((resolve) => setTimeout(resolve, 0))
+}
+
+/** Loads the classic widget script. It has no exports; the host page runs it as a script. */
+async function loadWidgetScript() {
+  // @ts-expect-error widget.js is a classic browser script, not an ES module.
+  await import("./widget.js")
+}
+
 describe("Askdesk widget loader", () => {
+  const messageHandlers: Array<
+    (event: { origin: string; data: unknown; source: unknown }) => void
+  > = []
+
   beforeEach(() => {
+    messageHandlers.length = 0
     vi.resetModules()
     vi.unstubAllGlobals()
+    vi.stubGlobal("window", {
+      addEventListener(
+        _type: string,
+        handler: (event: {
+          origin: string
+          data: unknown
+          source: unknown
+        }) => void
+      ) {
+        messageHandlers.push(handler)
+      },
+      removeEventListener(
+        _type: string,
+        handler: (event: {
+          origin: string
+          data: unknown
+          source: unknown
+        }) => void
+      ) {
+        const index = messageHandlers.indexOf(handler)
+        if (index >= 0) messageHandlers.splice(index, 1)
+      },
+    })
   })
 
-  it("logs and skips mounting when data-agent-id is missing", async () => {
+  it("logs and skips mounting when data-bot-id is missing", async () => {
     const consoleError = vi.fn()
-    const { appendChild, document } = fakeDocument({ agentId: null })
+    const fetchMock = vi.fn()
+    const { appendChild, document } = fakeDocument({ botId: null })
 
     vi.stubGlobal("document", document)
     vi.stubGlobal("console", { error: consoleError })
+    vi.stubGlobal("fetch", fetchMock)
 
-    await import("./widget.js")
+    await loadWidgetScript()
 
     expect(consoleError).toHaveBeenCalledWith(
-      "[Askdesk] Missing data-agent-id in script tag."
+      "[Askdesk] Missing data-bot-id in script tag."
     )
+    expect(fetchMock).not.toHaveBeenCalled()
     expect(appendChild).not.toHaveBeenCalled()
   })
 
-  it("mounts one Askdesk iframe for the given agent", async () => {
+  it("mounts one Askdesk iframe when the page is allowed", async () => {
     const consoleError = vi.fn()
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
     const { iframe, appendChild, document } = fakeDocument({
-      agentId: "agent_123",
+      botId: "bot_123",
     })
 
     vi.stubGlobal("document", document)
     vi.stubGlobal("console", { error: consoleError })
+    vi.stubGlobal("fetch", fetchMock)
 
-    await import("./widget.js")
+    await loadWidgetScript()
+    await flushLoader()
 
     expect(consoleError).not.toHaveBeenCalled()
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3000/api/widget/placement?botId=bot_123"
+    )
     expect(iframe.id).toBe("askdesk-chatbot-iframe")
-    expect(iframe.src).toBe("http://localhost:3000/widget?agentId=agent_123")
+    expect(iframe.src).toBe("http://localhost:3000/widget?botId=bot_123")
     expect(iframe.setAttribute).toHaveBeenCalledWith("title", "Askdesk Chatbot")
+    expect(iframe.setAttribute).toHaveBeenCalledWith("referrerpolicy", "origin")
     expect(appendChild).toHaveBeenCalledWith(iframe)
   })
 
+  it("removes the iframe only for a close message from that frame", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    const { iframe, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    const onClose = messageHandlers[0]
+    onClose({
+      origin: "https://evil.example",
+      data: { type: "askdesk:close" },
+      source: iframe.contentWindow,
+    })
+    onClose({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:close" },
+      source: {},
+    })
+    expect(iframe.remove).not.toHaveBeenCalled()
+
+    onClose({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:close" },
+      source: iframe.contentWindow,
+    })
+    expect(iframe.remove).toHaveBeenCalledOnce()
+    expect(messageHandlers).toEqual([])
+  })
+
+  it("does not mount an iframe when the placement check cannot be reached", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error("network"))
+    const { appendChild, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(appendChild).not.toHaveBeenCalled()
+  })
+
+  it("does not mount an iframe when the page is not allowed", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
+    const { appendChild, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(appendChild).not.toHaveBeenCalled()
+  })
+
   it("does not mount a second iframe when one already exists", async () => {
+    const fetchMock = vi.fn()
     const { appendChild, document } = fakeDocument({
-      agentId: "agent_123",
+      botId: "bot_123",
       existingWidget: { id: "askdesk-chatbot-iframe" },
     })
 
     vi.stubGlobal("document", document)
     vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
 
-    await import("./widget.js")
+    await loadWidgetScript()
 
+    expect(fetchMock).not.toHaveBeenCalled()
     expect(appendChild).not.toHaveBeenCalled()
+  })
+
+  it("waits for the document when the script runs before it is ready", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
+    const { document } = fakeDocument({ botId: "bot_123" })
+    document.readyState = "loading"
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+
+    expect(document.addEventListener).toHaveBeenCalledWith(
+      "DOMContentLoaded",
+      expect.any(Function)
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+
+    const onReady = document.addEventListener.mock.calls[0][1] as () => void
+    onReady()
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalled()
+  })
+
+  it("falls back when the script address is missing", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
+    const document = fakeDocument({ botId: "bot_123" }).document
+    document.currentScript = {
+      getAttribute(name: string) {
+        return name === "data-bot-id" ? "bot_123" : null
+      },
+    }
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://mydomain.com/api/widget/placement?botId=bot_123"
+    )
   })
 })
