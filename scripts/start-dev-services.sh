@@ -6,6 +6,11 @@ DB_CONTAINER="embeded-ai-chatbot-db-1"
 LLM_CONTAINER="embeded-ai-chatbot-litellm-1"
 
 if ! docker info >/dev/null 2>&1; then
+  if [[ "$(uname -s)" != "Darwin" ]]; then
+    echo "Docker is not running. Start Docker, then run npm run dev again."
+    exit 1
+  fi
+
   echo "Docker is not running. Starting Docker Desktop..."
   if ! open -a Docker; then
     echo "Could not start Docker Desktop. Start it manually, then run npm run dev again."
@@ -22,7 +27,7 @@ if ! docker info >/dev/null 2>&1; then
     sleep 2
   done
 
-  if [ "$ready" -ne 1 ]; then
+  if [[ "$ready" -ne 1 ]]; then
     echo "Docker Desktop did not become ready. Start it manually, then run npm run dev again."
     exit 1
   fi
