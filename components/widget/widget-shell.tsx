@@ -1,15 +1,23 @@
-import { WidgetDummyConversation } from "@/components/widget/widget-dummy-conversation"
+"use client"
+
+import dynamic from "next/dynamic"
+
 import WidgetHeader from "@/components/widget/widget-header"
 
-/**
- * Shows the bot shell.
- * WidgetDummyConversation is a temporary snapshot stand-in. See that file for how to remove it.
- */
-export function WidgetShell() {
+const WidgetConversation = dynamic(
+  () =>
+    import("@/components/widget/widget-conversation").then(
+      (mod) => mod.WidgetConversation
+    ),
+  { ssr: false }
+)
+
+/** Shows the bot shell for a visitor on an allowed host site. */
+export function WidgetShell({ botId }: { botId: string }) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <WidgetHeader />
-      <WidgetDummyConversation />
+      <WidgetConversation key={botId} botId={botId} />
     </div>
   )
 }

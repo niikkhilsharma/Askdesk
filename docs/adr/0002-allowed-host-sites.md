@@ -17,4 +17,4 @@ The account does not prove DNS ownership. Naming an address does nothing until t
 
 A pasted page URL is stored as its origin only. A missing scheme is rejected, so `http` and `https` are never guessed.
 
-On an allowed host site the widget shell loads and says answers are not live yet. It does not call the chat API. Visitor chat remains a separate plan. When it is added, answers must consult this same list. The chat request comes from inside the widget and does not carry the host site's origin itself.
+On an allowed host site the widget shell loads and the visitor can ask questions. Visitor chat is [0004](./0004-visitor-chat.md). Answers consult this same list. The chat request comes from inside the widget and does not carry the host site's origin itself.

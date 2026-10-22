@@ -18,9 +18,9 @@ export default async function WidgetPage({ searchParams }: WidgetPageProps) {
     origin !== null &&
     (await isBotAllowedOnOrigin(botId ?? "", origin))
 
-  if (!allowed) {
+  if (!allowed || !botId) {
     return null
   }
 
-  return <WidgetShell />
+  return <WidgetShell botId={botId} />
 }

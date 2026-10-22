@@ -29,7 +29,8 @@ export default async function InstallPage() {
         <h1 className="text-2xl font-semibold">Install</h1>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           Add each site where this bot may run. The snippet names your bot. It
-          runs only on the sites listed here. Visitor answers are not live yet.
+          runs only on the sites listed here, and visitors there can ask it
+          questions.
         </p>
       </div>
 
