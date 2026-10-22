@@ -153,10 +153,17 @@ describe("Askdesk widget loader", () => {
     expect(iframe.src).toBe("http://localhost:3000/widget?botId=bot_123")
     expect(iframe.setAttribute).toHaveBeenCalledWith("title", "Askdesk Chatbot")
     expect(iframe.setAttribute).toHaveBeenCalledWith("referrerpolicy", "origin")
+    expect(iframe.style.width).toBe("56px")
+    expect(iframe.style.height).toBe("56px")
+    expect(iframe.style.right).toBe("24px")
+    expect(iframe.style.bottom).toBe("24px")
+    expect(iframe.style.borderRadius).toBe("999px")
+    expect(iframe.style.boxShadow).toBe("none")
+    expect(iframe.style.overflow).toBe("visible")
     expect(appendChild).toHaveBeenCalledWith(iframe)
   })
 
-  it("removes the iframe only for a close message from that frame", async () => {
+  it("grows and shrinks the iframe without removing it", async () => {
     const fetchMock = vi.fn().mockResolvedValue(allowedPlacement("pass-1"))
     const { iframe, document } = fakeDocument({ botId: "bot_123" })
 
@@ -167,26 +174,64 @@ describe("Askdesk widget loader", () => {
     await loadWidgetScript()
     await flushLoader()
 
-    const onClose = messageHandlers[0]
-    onClose({
+    const onMessage = messageHandlers[0]
+    onMessage({
+      origin: "https://evil.example",
+      data: { type: "askdesk:open" },
+      source: iframe.contentWindow,
+    })
+    onMessage({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:open" },
+      source: {},
+    })
+    expect(iframe.style.width).toBe("56px")
+    expect(iframe.contentWindow.postMessage).not.toHaveBeenCalled()
+
+    onMessage({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:open" },
+      source: iframe.contentWindow,
+    })
+    expect(iframe.style.width).toBe("496px")
+    expect(iframe.style.height).toBe("696px")
+    expect(iframe.style.right).toBe("-24px")
+    expect(iframe.style.bottom).toBe("-24px")
+    expect(iframe.style.borderRadius).toBe("0")
+    expect(iframe.style.boxShadow).toBe("none")
+    expect(iframe.style.overflow).toBe("hidden")
+    expect(iframe.contentWindow.postMessage).toHaveBeenCalledWith(
+      { type: "askdesk:opened" },
+      "http://localhost:3000"
+    )
+
+    onMessage({
       origin: "https://evil.example",
       data: { type: "askdesk:close" },
       source: iframe.contentWindow,
     })
-    onClose({
+    onMessage({
       origin: "http://localhost:3000",
       data: { type: "askdesk:close" },
       source: {},
     })
+    expect(iframe.style.width).toBe("496px")
     expect(iframe.remove).not.toHaveBeenCalled()
 
-    onClose({
+    onMessage({
       origin: "http://localhost:3000",
       data: { type: "askdesk:close" },
       source: iframe.contentWindow,
     })
-    expect(iframe.remove).toHaveBeenCalledOnce()
-    expect(messageHandlers).toEqual([])
+    expect(iframe.style.width).toBe("56px")
+    expect(iframe.style.height).toBe("56px")
+    expect(iframe.style.right).toBe("24px")
+    expect(iframe.style.bottom).toBe("24px")
+    expect(iframe.style.borderRadius).toBe("999px")
+    expect(iframe.style.boxShadow).toBe("none")
+    expect(iframe.style.overflow).toBe("visible")
+    expect(iframe.remove).not.toHaveBeenCalled()
+    expect(messageHandlers).toHaveLength(1)
   })
 
   it("does not mount an iframe when the placement check cannot be reached", async () => {
