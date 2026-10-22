@@ -19,18 +19,22 @@ type VisitorMessageStore = {
   setItem(key: string, value: string): void
 }
 
-/** Storage key for one bot's visitor thread. */
-export function visitorMessagesKey(botId: string) {
-  return `askdesk:visitor-messages:${botId}`
+/** Storage key for one bot's visitor thread on one host site. */
+export function visitorMessagesKey(botId: string, hostOrigin: string) {
+  const host = encodeURIComponent(hostOrigin)
+  const bot = encodeURIComponent(botId)
+
+  return `askdesk:visitor-messages:${host}:${bot}`
 }
 
-/** Reads the messages stored for this bot. */
+/** Reads the messages stored for this bot on this host site. */
 export function readVisitorMessages(
   storage: Pick<VisitorMessageStore, "getItem">,
-  botId: string
+  botId: string,
+  hostOrigin: string
 ) {
   try {
-    const raw = storage.getItem(visitorMessagesKey(botId))
+    const raw = storage.getItem(visitorMessagesKey(botId, hostOrigin))
 
     if (!raw) {
       return []
@@ -48,14 +52,18 @@ export function readVisitorMessages(
   }
 }
 
-/** Saves this bot's messages in the browser. */
+/** Saves this bot's messages for this host site. */
 export function writeVisitorMessages(
   storage: Pick<VisitorMessageStore, "setItem">,
   botId: string,
+  hostOrigin: string,
   messages: UIMessage[]
 ) {
   try {
-    storage.setItem(visitorMessagesKey(botId), JSON.stringify(messages))
+    storage.setItem(
+      visitorMessagesKey(botId, hostOrigin),
+      JSON.stringify(messages)
+    )
   } catch {
     // A full or blocked store still leaves the messages on screen.
   }

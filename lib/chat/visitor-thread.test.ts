@@ -13,6 +13,8 @@ import {
 } from "@/lib/chat/visitor-thread"
 
 const BOT = "bot_abc"
+const HOST = "http://localhost:5500"
+const OTHER_HOST = "http://clinic.example"
 
 const messages: UIMessage[] = [
   {
@@ -45,11 +47,15 @@ describe("visitor messages", () => {
   it("keeps stored messages across a reload", () => {
     const storage = memoryStorage()
 
-    writeVisitorMessages(storage, BOT, messages)
+    writeVisitorMessages(storage, BOT, HOST, messages)
 
-    expect(visitorMessagesKey(BOT)).toContain(BOT)
-    expect(readVisitorMessages(storage, BOT)).toEqual(messages)
-    expect(readVisitorMessages(storage, "bot_other")).toEqual([])
+    expect(visitorMessagesKey(BOT, HOST)).toContain(BOT)
+    expect(visitorMessagesKey(BOT, HOST)).toContain(
+      encodeURIComponent(HOST)
+    )
+    expect(readVisitorMessages(storage, BOT, HOST)).toEqual(messages)
+    expect(readVisitorMessages(storage, "bot_other", HOST)).toEqual([])
+    expect(readVisitorMessages(storage, BOT, OTHER_HOST)).toEqual([])
   })
 
   it("does not clear stored messages when a new pass arrives", () => {
@@ -60,26 +66,26 @@ describe("visitor messages", () => {
       answering: true,
     }
 
-    writeVisitorMessages(storage, BOT, thread.messages)
+    writeVisitorMessages(storage, BOT, HOST, thread.messages)
 
     const next = acceptVisitorPass(thread, "pass-2")
 
     expect(next.messages).toBe(messages)
     expect(next.pass).toBe("pass-2")
     expect(next.answering).toBe(true)
-    writeVisitorMessages(storage, BOT, next.messages)
-    expect(readVisitorMessages(storage, BOT)).toEqual(messages)
+    writeVisitorMessages(storage, BOT, HOST, next.messages)
+    expect(readVisitorMessages(storage, BOT, HOST)).toEqual(messages)
   })
 
   it("drops a stored value that is not a thread", () => {
     const storage = memoryStorage()
-    storage.setItem(visitorMessagesKey(BOT), "not-json")
+    storage.setItem(visitorMessagesKey(BOT, HOST), "not-json")
     storage.setItem(
-      visitorMessagesKey("bot_other"),
+      visitorMessagesKey("bot_other", HOST),
       JSON.stringify({ nope: true })
     )
     storage.setItem(
-      visitorMessagesKey("bot_mixed"),
+      visitorMessagesKey("bot_mixed", HOST),
       JSON.stringify([
         messages[0],
         null,
@@ -94,9 +100,9 @@ describe("visitor messages", () => {
       ])
     )
 
-    expect(readVisitorMessages(storage, BOT)).toEqual([])
-    expect(readVisitorMessages(storage, "bot_other")).toEqual([])
-    expect(readVisitorMessages(storage, "bot_mixed")).toEqual([
+    expect(readVisitorMessages(storage, BOT, HOST)).toEqual([])
+    expect(readVisitorMessages(storage, "bot_other", HOST)).toEqual([])
+    expect(readVisitorMessages(storage, "bot_mixed", HOST)).toEqual([
       messages[0],
       {
         id: "note-1",
@@ -116,6 +122,7 @@ describe("visitor messages", () => {
           },
         },
         BOT,
+        HOST,
         messages
       )
     ).not.toThrow()

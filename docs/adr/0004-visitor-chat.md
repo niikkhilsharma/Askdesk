@@ -8,7 +8,7 @@ The install snippet receives the pass and gives it to the iframe. The iframe ask
 
 A copied pass can be used until it expires, because a later question cannot show the host site again. The short lifetime is the limit. There is no message cap.
 
-Messages are kept in the iframe's `localStorage`, under the bot's public id. The browser keeps a separate copy per host site. Askdesk does not store the thread. Each question still sends the earlier messages so the model can follow the conversation. A new pass does not clear them.
+Messages are kept in the iframe's `localStorage`, under the bot's public id and the host site. Each host site has its own copy. Askdesk does not store the thread. Each question still sends the earlier messages so the model can follow the conversation. A new pass does not clear them.
 
 Opening `/widget` directly still shows nothing, as [0002](./0002-allowed-host-sites.md) already requires.
 

@@ -15,6 +15,7 @@ import {
   writeVisitorMessages,
   type VisitorRefresh,
 } from "@/lib/chat/visitor-thread"
+import { originFromReferer } from "@/lib/install/origin"
 
 type VisitorSession = {
   pass: string | null
@@ -91,11 +92,19 @@ export function WidgetConversation({ botId }: { botId: string }) {
   const [sessionKey] = useState(() => ({}))
   const [answering, setAnswering] = useState(true)
   const threadRef = useRef<HTMLDivElement>(null)
-  const [initialMessages] = useState(() =>
-    typeof window === "undefined"
-      ? []
-      : readVisitorMessages(window.localStorage, botId)
-  )
+  const [initialMessages] = useState(() => {
+    if (typeof window === "undefined") {
+      return []
+    }
+
+    const hostOrigin = originFromReferer(document.referrer)
+
+    if (!hostOrigin) {
+      return []
+    }
+
+    return readVisitorMessages(window.localStorage, botId, hostOrigin)
+  })
 
   /** Asks the install snippet for a new visitor pass and waits for its reply. */
   const askParentForPass = useCallback(() => {
@@ -165,7 +174,11 @@ export function WidgetConversation({ botId }: { botId: string }) {
     const session = sessionFor(sessionKey)
     session.setAnswering = setAnswering
     session.messages = messages
-    writeVisitorMessages(window.localStorage, botId, messages)
+    const hostOrigin = originFromReferer(document.referrer)
+
+    if (hostOrigin) {
+      writeVisitorMessages(window.localStorage, botId, hostOrigin, messages)
+    }
   }, [botId, messages, sessionKey])
 
   useEffect(() => {
