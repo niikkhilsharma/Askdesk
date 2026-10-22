@@ -15,7 +15,7 @@ const WidgetConversation = dynamic(
 /** Shows the bot shell for a visitor on an allowed host site. */
 export function WidgetShell({ botId }: { botId: string }) {
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-background text-foreground">
       <WidgetHeader />
       <WidgetConversation key={botId} botId={botId} />
     </div>

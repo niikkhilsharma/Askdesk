@@ -5,6 +5,7 @@ import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 
 import AssistantMessageBubble from "@/components/widget/assistant-message-bubble"
+import AssistantReplyLoader from "@/components/widget/assistant-reply-loader"
 import UserMessageBubble from "@/components/widget/user-message-bubble"
 import WidgetInput from "@/components/widget/widget-input"
 import {
@@ -85,6 +86,20 @@ function refreshFromMessage(data: unknown): VisitorRefresh | null {
   }
 
   return null
+}
+
+/** Returns a part's text when a visitor can read it. */
+function visiblePartText(part: UIMessage["parts"][number]) {
+  if (part.type !== "text" || typeof part.text !== "string") {
+    return null
+  }
+
+  return part.text.trim().length > 0 ? part.text : null
+}
+
+/** Reports whether this assistant message already has reply text. */
+function assistantReplyVisible(message: UIMessage) {
+  return message.parts.some((part) => visiblePartText(part) !== null)
 }
 
 /** Live visitor thread for one bot, kept in this browser. */
@@ -252,6 +267,13 @@ export function WidgetConversation({ botId }: { botId: string }) {
     }
   }, [sessionKey, setMessages])
 
+  const busy = status === "submitted" || status === "streaming"
+  const lastMessage = messages.at(-1)
+  const awaitingReply =
+    answering &&
+    busy &&
+    (lastMessage?.role !== "assistant" || !assistantReplyVisible(lastMessage))
+
   useEffect(() => {
     const thread = threadRef.current
 
@@ -260,13 +282,11 @@ export function WidgetConversation({ botId }: { botId: string }) {
     }
 
     thread.scrollTop = thread.scrollHeight
-  }, [messages])
-
-  const busy = status === "submitted" || status === "streaming"
+  }, [messages, awaitingReply])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={threadRef} className="flex-1 overflow-y-auto px-2 py-4">
+      <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto px-2 py-4">
         {messages.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground">
             Send a message to start chatting.
@@ -275,29 +295,34 @@ export function WidgetConversation({ botId }: { botId: string }) {
           messages.map((message) => (
             <div key={message.id}>
               {message.role === "user"
-                ? message.parts.map((part, index) =>
-                    part.type === "text" ? (
+                ? message.parts.map((part, index) => {
+                    const text = visiblePartText(part)
+
+                    return text ? (
                       <UserMessageBubble
                         key={`${message.id}-${index}`}
-                        message={part.text}
+                        message={text}
                       />
                     ) : null
-                  )
-                : message.parts.map((part, index) =>
-                    part.type === "text" ? (
+                  })
+                : message.parts.map((part, index) => {
+                    const text = visiblePartText(part)
+
+                    return text ? (
                       <AssistantMessageBubble
                         key={`${message.id}-${index}`}
-                        message={part.text}
+                        message={text}
                       />
                     ) : null
-                  )}
+                  })}
             </div>
           ))
         )}
+        {awaitingReply ? <AssistantReplyLoader /> : null}
       </div>
 
       {!answering ? (
-        <p className="px-2 text-center text-sm text-muted-foreground">
+        <p className="shrink-0 px-2 text-center text-sm text-muted-foreground">
           Answering has stopped.
         </p>
       ) : null}
