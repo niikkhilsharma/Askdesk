@@ -88,11 +88,18 @@ function refreshFromMessage(data: unknown): VisitorRefresh | null {
   return null
 }
 
+/** Returns a part's text when a visitor can read it. */
+function visiblePartText(part: UIMessage["parts"][number]) {
+  if (part.type !== "text" || typeof part.text !== "string") {
+    return null
+  }
+
+  return part.text.trim().length > 0 ? part.text : null
+}
+
 /** Reports whether this assistant message already has reply text. */
 function assistantReplyVisible(message: UIMessage) {
-  return message.parts.some(
-    (part) => part.type === "text" && part.text.length > 0
-  )
+  return message.parts.some((part) => visiblePartText(part) !== null)
 }
 
 /** Live visitor thread for one bot, kept in this browser. */
@@ -288,22 +295,26 @@ export function WidgetConversation({ botId }: { botId: string }) {
           messages.map((message) => (
             <div key={message.id}>
               {message.role === "user"
-                ? message.parts.map((part, index) =>
-                    part.type === "text" ? (
+                ? message.parts.map((part, index) => {
+                    const text = visiblePartText(part)
+
+                    return text ? (
                       <UserMessageBubble
                         key={`${message.id}-${index}`}
-                        message={part.text}
+                        message={text}
                       />
                     ) : null
-                  )
-                : message.parts.map((part, index) =>
-                    part.type === "text" && part.text.length > 0 ? (
+                  })
+                : message.parts.map((part, index) => {
+                    const text = visiblePartText(part)
+
+                    return text ? (
                       <AssistantMessageBubble
                         key={`${message.id}-${index}`}
-                        message={part.text}
+                        message={text}
                       />
                     ) : null
-                  )}
+                  })}
             </div>
           ))
         )}
