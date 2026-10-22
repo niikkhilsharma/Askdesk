@@ -5,6 +5,7 @@ import { streamAccountAnswer } from "@/lib/chat/answer"
 import { VISITOR_PASS_REFUSED_STATUS } from "@/lib/chat/visitor-thread"
 import { getAccountIdForBot } from "@/lib/install/bots"
 import { readVisitorPass } from "@/lib/install/pass"
+import { isBotAllowedOnOrigin } from "@/lib/install/placement"
 
 /** Refuses a visitor question that has no usable pass. */
 function refuseVisitorPass() {
@@ -14,7 +15,7 @@ function refuseVisitorPass() {
   )
 }
 
-/** Streams a visitor answer when the pass is still valid for this bot. */
+/** Streams a visitor answer when the pass is still valid for this bot and host site. */
 export async function POST(req: NextRequest) {
   const body: unknown = await req.json()
 
@@ -32,6 +33,10 @@ export async function POST(req: NextRequest) {
   const claims = pass ? await readVisitorPass(pass) : null
 
   if (!claims || claims.botId !== botId) {
+    return refuseVisitorPass()
+  }
+
+  if (!(await isBotAllowedOnOrigin(claims.botId, claims.origin))) {
     return refuseVisitorPass()
   }
 

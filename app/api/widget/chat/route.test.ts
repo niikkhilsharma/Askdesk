@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 
 const streamAccountAnswer = vi.hoisted(() => vi.fn())
 const getAccountIdForBot = vi.hoisted(() => vi.fn())
+const isBotAllowedOnOrigin = vi.hoisted(() => vi.fn())
 
 vi.mock("@/lib/chat/answer", () => ({
   streamAccountAnswer,
@@ -10,6 +11,10 @@ vi.mock("@/lib/chat/answer", () => ({
 
 vi.mock("@/lib/install/bots", () => ({
   getAccountIdForBot,
+}))
+
+vi.mock("@/lib/install/placement", () => ({
+  isBotAllowedOnOrigin,
 }))
 
 import { POST } from "@/app/api/widget/chat/route"
@@ -41,11 +46,13 @@ describe("POST /api/widget/chat", () => {
   beforeEach(() => {
     streamAccountAnswer.mockReset()
     getAccountIdForBot.mockReset()
+    isBotAllowedOnOrigin.mockReset()
     vi.stubEnv("VISITOR_PASS_SECRET", SECRET)
     streamAccountAnswer.mockResolvedValue(
       new Response("stream", { status: 200 })
     )
     getAccountIdForBot.mockResolvedValue(42)
+    isBotAllowedOnOrigin.mockResolvedValue(true)
   })
 
   afterEach(() => {
@@ -59,6 +66,7 @@ describe("POST /api/widget/chat", () => {
 
     expect(response.status).toBe(200)
     expect(await response.text()).toBe("stream")
+    expect(isBotAllowedOnOrigin).toHaveBeenCalledWith(BOT, ORIGIN)
     expect(getAccountIdForBot).toHaveBeenCalledWith(BOT)
     expect(streamAccountAnswer).toHaveBeenCalledWith(42, messages)
   })
@@ -134,5 +142,18 @@ describe("POST /api/widget/chat", () => {
     expect(missingAccount.status).toBe(401)
     expect(streamAccountAnswer).not.toHaveBeenCalled()
     expect(getAccountIdForBot).toHaveBeenCalledTimes(1)
+  })
+
+  it("refuses a pass when the host site is no longer allowed", async () => {
+    const pass = await signVisitorPass(BOT, ORIGIN)
+    isBotAllowedOnOrigin.mockResolvedValue(false)
+
+    const response = await POST(post({ pass, botId: BOT, messages }))
+
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ message: "Visitor pass refused" })
+    expect(isBotAllowedOnOrigin).toHaveBeenCalledWith(BOT, ORIGIN)
+    expect(getAccountIdForBot).not.toHaveBeenCalled()
+    expect(streamAccountAnswer).not.toHaveBeenCalled()
   })
 })
