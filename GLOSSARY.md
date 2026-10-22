@@ -27,3 +27,7 @@ _Avoid_: Domain, embed, website, allowed origin
 **Install snippet**:
 The text an account copies onto a host site to place its bot there. The snippet names the bot. It does not, by itself, allow the bot to run.
 _Avoid_: Script tag, embed code, agent id
+
+**Visitor pass**:
+A short-lived proof that the host site is on the account's list. It names the bot, that host site, and an expiry one hour out. The install snippet gives it to the widget, and the widget sends it with each question. It is not the account's login.
+_Avoid_: Session, token, API key

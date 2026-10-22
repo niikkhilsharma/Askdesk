@@ -12,9 +12,10 @@ function fakeDocument({
     id: "",
     src: "",
     style: {} as Record<string, string>,
-    contentWindow: {},
+    contentWindow: { postMessage: vi.fn() },
     remove: vi.fn(),
     setAttribute: vi.fn(),
+    addEventListener: vi.fn(),
   }
   const appendChild = vi.fn()
 
@@ -47,6 +48,29 @@ function fakeDocument({
 /** Lets the loader finish its placement check. */
 async function flushLoader() {
   await new Promise((resolve) => setTimeout(resolve, 0))
+}
+
+/** Placement response the loader can read a visitor pass from. */
+function allowedPlacement(pass: string) {
+  return {
+    ok: true,
+    json: async () => ({ allowed: true, pass }),
+  }
+}
+
+/** Returns the load listener the loader registered on the iframe. */
+function frameLoadHandler(iframe: {
+  addEventListener: ReturnType<typeof vi.fn>
+}) {
+  const call = iframe.addEventListener.mock.calls.find(
+    (entry) => entry[0] === "load"
+  )
+
+  if (!call) {
+    throw new Error("iframe load listener was not registered")
+  }
+
+  return call[1] as () => void
 }
 
 /** Loads the classic widget script. It has no exports; the host page runs it as a script. */
@@ -109,7 +133,7 @@ describe("Askdesk widget loader", () => {
 
   it("mounts one Askdesk iframe when the page is allowed", async () => {
     const consoleError = vi.fn()
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    const fetchMock = vi.fn().mockResolvedValue(allowedPlacement("pass-1"))
     const { iframe, appendChild, document } = fakeDocument({
       botId: "bot_123",
     })
@@ -133,7 +157,7 @@ describe("Askdesk widget loader", () => {
   })
 
   it("removes the iframe only for a close message from that frame", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    const fetchMock = vi.fn().mockResolvedValue(allowedPlacement("pass-1"))
     const { iframe, document } = fakeDocument({ botId: "bot_123" })
 
     vi.stubGlobal("document", document)
@@ -254,5 +278,234 @@ describe("Askdesk widget loader", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       "https://mydomain.com/api/widget/placement?botId=bot_123"
     )
+  })
+
+  it("hands the visitor pass to the iframe and replaces it when the iframe asks", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(allowedPlacement("pass-1"))
+      .mockResolvedValueOnce(allowedPlacement("pass-2"))
+    const { iframe, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(iframe.contentWindow.postMessage).not.toHaveBeenCalled()
+
+    frameLoadHandler(iframe)()
+
+    expect(iframe.contentWindow.postMessage).toHaveBeenCalledWith(
+      { type: "askdesk:pass", pass: "pass-1" },
+      "http://localhost:3000"
+    )
+
+    const onMessage = messageHandlers[0]
+    onMessage({
+      origin: "https://evil.example",
+      data: { type: "askdesk:refresh" },
+      source: iframe.contentWindow,
+    })
+    onMessage({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:refresh" },
+      source: {},
+    })
+    onMessage({
+      origin: "http://localhost:3000",
+      data: null,
+      source: iframe.contentWindow,
+    })
+    onMessage({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:nope" },
+      source: iframe.contentWindow,
+    })
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(iframe.contentWindow.postMessage).toHaveBeenCalledTimes(1)
+
+    onMessage({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:refresh" },
+      source: iframe.contentWindow,
+    })
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(iframe.contentWindow.postMessage).toHaveBeenLastCalledWith(
+      { type: "askdesk:pass", pass: "pass-2" },
+      "http://localhost:3000"
+    )
+  })
+
+  it("sends the pass it already holds when the iframe is listening", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(allowedPlacement("pass-1"))
+    const { iframe, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    messageHandlers[0]({
+      origin: "https://evil.example",
+      data: { type: "askdesk:ready" },
+      source: iframe.contentWindow,
+    })
+    messageHandlers[0]({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:ready" },
+      source: iframe.contentWindow,
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(iframe.contentWindow.postMessage).toHaveBeenCalledTimes(1)
+    expect(iframe.contentWindow.postMessage).toHaveBeenCalledWith(
+      { type: "askdesk:pass", pass: "pass-1" },
+      "http://localhost:3000"
+    )
+  })
+
+  it("tells the iframe the host site is no longer allowed without removing it", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(allowedPlacement("pass-1"))
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+    const { iframe, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+    frameLoadHandler(iframe)()
+
+    messageHandlers[0]({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:refresh" },
+      source: iframe.contentWindow,
+    })
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(iframe.remove).not.toHaveBeenCalled()
+    expect(iframe.contentWindow.postMessage).toHaveBeenLastCalledWith(
+      { type: "askdesk:denied" },
+      "http://localhost:3000"
+    )
+  })
+
+  it("tells the iframe when a refresh fails without calling the site removed", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(allowedPlacement("pass-1"))
+      .mockRejectedValueOnce(new Error("network"))
+    const { iframe, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+    frameLoadHandler(iframe)()
+
+    messageHandlers[0]({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:refresh" },
+      source: iframe.contentWindow,
+    })
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(iframe.remove).not.toHaveBeenCalled()
+    expect(iframe.contentWindow.postMessage).toHaveBeenLastCalledWith(
+      { type: "askdesk:unreachable" },
+      "http://localhost:3000"
+    )
+  })
+
+  it("waits while a refresh connection is still open", async () => {
+    let finishPlacement: (value: unknown) => void = () => {}
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(allowedPlacement("pass-1"))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishPlacement = resolve
+          })
+      )
+    const { iframe, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+    frameLoadHandler(iframe)()
+
+    messageHandlers[0]({
+      origin: "http://localhost:3000",
+      data: { type: "askdesk:refresh" },
+      source: iframe.contentWindow,
+    })
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(iframe.contentWindow.postMessage).toHaveBeenCalledTimes(1)
+
+    finishPlacement(allowedPlacement("pass-2"))
+    await flushLoader()
+
+    expect(iframe.contentWindow.postMessage).toHaveBeenLastCalledWith(
+      { type: "askdesk:pass", pass: "pass-2" },
+      "http://localhost:3000"
+    )
+  })
+
+  it("does not mount an iframe when the placement response has an empty pass", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ allowed: true, pass: "" }),
+    })
+    const { appendChild, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(appendChild).not.toHaveBeenCalled()
+  })
+
+  it("does not mount an iframe when the placement response has no pass", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ allowed: true }),
+    })
+    const { appendChild, document } = fakeDocument({ botId: "bot_123" })
+
+    vi.stubGlobal("document", document)
+    vi.stubGlobal("console", { error: vi.fn() })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await loadWidgetScript()
+    await flushLoader()
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(appendChild).not.toHaveBeenCalled()
   })
 })

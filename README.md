@@ -93,7 +93,7 @@ On a host site (see `public/test-site.html` for a local stand-in):
 
 The account copies that snippet from **Install**. The loader reads its own origin, requires `data-bot-id`, and asks Askdesk whether the parent page's origin is one of the account's host sites. Only then does it mount a fixed iframe pointing at `/widget`. The iframe choice is documented in [`architecture/ADR-001-iframe-vs-div.md`](architecture/ADR-001-iframe-vs-div.md): CSS and JS isolation on websites we do not control.
 
-A copied snippet does not run on a site the account has not named. On an allowed host site the shell loads and says answers are not live yet. Chat against indexed documents still runs through the signed-in dashboard. Wiring visitors on the host site to that knowledge base is the next product step.
+A copied snippet does not run on a site the account has not named. On an allowed host site the loader receives a visitor pass, and the widget answers from that account's documents. The thread stays in the visitor's browser. The signed-in dashboard chat still uses the account session.
 
 ## Stack
 
@@ -122,6 +122,7 @@ You need Node.js, a Neon (or other Postgres) database, a Cloudinary account, a P
    ```bash
    DATABASE_URL=
    AUTH_SECRET=
+   VISITOR_PASS_SECRET=
 
    CLOUDINARY_CLOUD_NAME=
    CLOUDINARY_API_KEY=
@@ -162,8 +163,7 @@ npm test
 
 ## What’s next
 
-The core loop — account, PDF knowledge base, grounded chat — works for the owner. Still to build for the public product:
+The core loop — account, PDF knowledge base, grounded chat — works for the owner, and visitors on an allowed host site can ask the same documents. Still to build for the public product:
 
-- Visitor chat on the embed, scoped to the bot and its allowed host sites
 - Paid plan (Standard is on the landing page as coming soon)
 - More than PDFs, plus caching and load testing as traffic grows

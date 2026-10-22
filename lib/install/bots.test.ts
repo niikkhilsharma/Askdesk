@@ -49,6 +49,7 @@ vi.mock("@/db/db", () => ({
 import {
   backfillBots,
   ensureBotForUser,
+  getAccountIdForBot,
   getInstallState,
 } from "@/lib/install/bots"
 
@@ -122,6 +123,32 @@ describe("getInstallState", () => {
       bot,
       hostSites: [hostSite],
     })
+  })
+})
+
+describe("getAccountIdForBot", () => {
+  beforeEach(() => {
+    steps.length = 0
+  })
+
+  it("returns the account that owns the bot", async () => {
+    steps.push([{ userId: 4 }])
+
+    await expect(getAccountIdForBot("bot_existing")).resolves.toBe(4)
+  })
+
+  it("returns null when the bot does not exist", async () => {
+    steps.push([])
+
+    await expect(getAccountIdForBot("bot_missing")).resolves.toBeNull()
+  })
+
+  it("returns null for a missing or oversized public id without reading a row", async () => {
+    steps.push([{ userId: 4 }])
+
+    await expect(getAccountIdForBot("")).resolves.toBeNull()
+    await expect(getAccountIdForBot("b".repeat(65))).resolves.toBeNull()
+    await expect(getAccountIdForBot("bot_existing")).resolves.toBe(4)
   })
 })
 

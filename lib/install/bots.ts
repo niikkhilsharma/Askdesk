@@ -60,6 +60,21 @@ export async function getInstallState(userId: number) {
   return { bot, hostSites }
 }
 
+/** Returns the account that owns this bot, or null when there is no such bot. */
+export async function getAccountIdForBot(publicId: string) {
+  if (!publicId || publicId.length > 64) {
+    return null
+  }
+
+  const [bot] = await db
+    .select({ userId: botsTable.userId })
+    .from(botsTable)
+    .where(eq(botsTable.publicId, publicId))
+    .limit(1)
+
+  return bot?.userId ?? null
+}
+
 /** Creates a bot for every account that does not have one yet. */
 export async function backfillBots() {
   const [users, existingBots] = await Promise.all([

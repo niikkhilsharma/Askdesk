@@ -16,7 +16,34 @@
     return new URL(scriptSrc).origin
   }
 
-  /** Adds the bot iframe only when this page is an allowed host site. */
+  /** Asks whether this page may show the bot. */
+  async function fetchPlacement(baseUrl, botId) {
+    try {
+      const response = await fetch(
+        `${baseUrl}/api/widget/placement?botId=${encodeURIComponent(botId)}`
+      )
+
+      if (response.status === 404) {
+        return { result: "denied" }
+      }
+
+      if (!response.ok) {
+        return { result: "unreachable" }
+      }
+
+      const body = await response.json()
+
+      if (!body || typeof body.pass !== "string" || body.pass.length === 0) {
+        return { result: "unreachable" }
+      }
+
+      return { result: "allowed", pass: body.pass }
+    } catch {
+      return { result: "unreachable" }
+    }
+  }
+
+  /** Adds the bot iframe when this page is allowed, and gives it a visitor pass. */
   async function loadChatbotWidget() {
     const botId = scriptElement?.getAttribute("data-bot-id")
 
@@ -32,20 +59,16 @@
     }
 
     const baseUrl = getWidgetBaseUrl()
-    let allowed = false
+    const placement = await fetchPlacement(baseUrl, botId)
 
-    try {
-      const response = await fetch(
-        `${baseUrl}/api/widget/placement?botId=${encodeURIComponent(botId)}`
-      )
-      allowed = response.ok
-    } catch {
-      allowed = false
-    }
-
-    if (!allowed || document.getElementById("askdesk-chatbot-iframe")) {
+    if (
+      placement.result !== "allowed" ||
+      document.getElementById("askdesk-chatbot-iframe")
+    ) {
       return
     }
+
+    let currentPass = placement.pass
 
     const iframe = document.createElement("iframe")
     iframe.id = "askdesk-chatbot-iframe"
@@ -64,19 +87,63 @@
     iframe.setAttribute("allow", "clipboard-write")
     iframe.setAttribute("referrerpolicy", "origin")
 
-    document.body.appendChild(iframe)
+    /** Posts one message from this page into the bot iframe. */
+    function postToFrame(message) {
+      if (!iframe.contentWindow) return
 
-    /** Removes the iframe when the chat asks the host page to close it. */
-    function onCloseMessage(event) {
-      if (event.origin !== baseUrl) return
-      if (!event.data || event.data.type !== "askdesk:close") return
-      if (event.source !== iframe.contentWindow) return
-
-      iframe.remove()
-      window.removeEventListener("message", onCloseMessage)
+      iframe.contentWindow.postMessage(message, baseUrl)
     }
 
-    window.addEventListener("message", onCloseMessage)
+    /** Hands the current visitor pass to the bot iframe. */
+    function handPassToFrame() {
+      postToFrame({ type: "askdesk:pass", pass: currentPass })
+    }
+
+    /** Tells the iframe how a finished refresh turned out. */
+    async function replacePass() {
+      const nextPlacement = await fetchPlacement(baseUrl, botId)
+
+      if (nextPlacement.result === "allowed") {
+        currentPass = nextPlacement.pass
+        handPassToFrame()
+        return
+      }
+
+      // A refusal leaves the iframe up. Removing it when the host site is no
+      // longer allowed is a later change. See docs/adr/0004-visitor-chat.md.
+      postToFrame({
+        type:
+          nextPlacement.result === "denied"
+            ? "askdesk:denied"
+            : "askdesk:unreachable",
+      })
+    }
+
+    /** Closes the chat, hands over the pass, or refreshes it when the iframe asks. */
+    function onWidgetMessage(event) {
+      if (event.origin !== baseUrl) return
+      if (event.source !== iframe.contentWindow) return
+      if (!event.data) return
+
+      if (event.data.type === "askdesk:close") {
+        iframe.remove()
+        window.removeEventListener("message", onWidgetMessage)
+        return
+      }
+
+      if (event.data.type === "askdesk:ready") {
+        handPassToFrame()
+        return
+      }
+
+      if (event.data.type === "askdesk:refresh") {
+        void replacePass()
+      }
+    }
+
+    iframe.addEventListener("load", handPassToFrame)
+    window.addEventListener("message", onWidgetMessage)
+    document.body.appendChild(iframe)
   }
 
   if (document.readyState === "loading") {

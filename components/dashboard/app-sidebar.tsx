@@ -2,14 +2,11 @@
 
 import {
   BookOpen,
-  Calendar,
   Code,
   Command,
   Home,
-  Inbox,
   MessageSquare,
   PanelLeft,
-  Search,
   Settings,
 } from "lucide-react"
 import Link from "next/link"
@@ -46,21 +43,6 @@ const items = [
     title: "Chat",
     url: "/dashboard/chat",
     icon: MessageSquare,
-  },
-  {
-    title: "Inbox",
-    url: "/dashboard/inbox",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "/dashboard/calendar",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "/dashboard/search",
-    icon: Search,
   },
   {
     title: "Knowledge Base",
