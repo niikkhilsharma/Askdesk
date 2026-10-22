@@ -23,7 +23,7 @@ function closeWidget() {
 /** Chat widget header with the Askdesk name and a close control. */
 export default function WidgetHeader() {
   return (
-    <div className="sticky top-0 z-10 border-b bg-card">
+    <div className="shrink-0 border-b bg-card">
       <div className="flex items-center justify-between px-2 py-4">
         <div className="flex items-center gap-2">
           <Avatar>
