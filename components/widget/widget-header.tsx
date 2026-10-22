@@ -1,27 +1,18 @@
 "use client"
 
+import type { Ref } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
-/** Asks the host page to remove the chat iframe. */
-function closeWidget() {
-  if (window.parent === window) return
-
-  let targetOrigin = "*"
-  if (document.referrer) {
-    try {
-      targetOrigin = new URL(document.referrer).origin
-    } catch {
-      targetOrigin = "*"
-    }
-  }
-
-  window.parent.postMessage({ type: "askdesk:close" }, targetOrigin)
-}
-
 /** Chat widget header with the Askdesk name and a close control. */
-export default function WidgetHeader() {
+export default function WidgetHeader({
+  onClose,
+  closeRef,
+}: {
+  onClose: () => void
+  closeRef?: Ref<HTMLButtonElement>
+}) {
   return (
     <div className="shrink-0 border-b bg-card">
       <div className="flex items-center justify-between px-2 py-4">
@@ -33,11 +24,12 @@ export default function WidgetHeader() {
         </div>
 
         <Button
+          ref={closeRef}
           type="button"
           variant="ghost"
           size="icon"
           aria-label="Close chat"
-          onClick={closeWidget}
+          onClick={onClose}
         >
           <XIcon />
         </Button>

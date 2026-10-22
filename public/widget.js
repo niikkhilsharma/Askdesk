@@ -73,16 +73,38 @@
     const iframe = document.createElement("iframe")
     iframe.id = "askdesk-chatbot-iframe"
     iframe.src = `${baseUrl}/widget?botId=${encodeURIComponent(botId)}`
+    const launcherEdge = "56px"
+    const panelWidth = 400
+    const panelHeight = 600
+    const frameInset = 24
+    // Room around the Panel so its own shadow is visible. The iframe has none.
+    const shadowRoom = 48
+
     iframe.style.position = "fixed"
-    iframe.style.right = "24px"
-    iframe.style.bottom = "24px"
-    iframe.style.width = "400px"
-    iframe.style.height = "600px"
     iframe.style.border = "none"
-    iframe.style.borderRadius = "16px"
     iframe.style.zIndex = "999999"
-    iframe.style.boxShadow = "0 8px 30px rgba(0, 0, 0, 0.18)"
     iframe.style.background = "transparent"
+
+    /** Sets the iframe to the round Launcher, or to a clear window around the Panel. */
+    function sizeFrame(open) {
+      iframe.style.width = open
+        ? `${panelWidth + shadowRoom * 2}px`
+        : launcherEdge
+      iframe.style.height = open
+        ? `${panelHeight + shadowRoom * 2}px`
+        : launcherEdge
+      iframe.style.right = open ? `${frameInset - shadowRoom}px` : `${frameInset}px`
+      iframe.style.bottom = open
+        ? `${frameInset - shadowRoom}px`
+        : `${frameInset}px`
+      iframe.style.borderRadius = open ? "0" : "999px"
+      iframe.style.boxShadow = "none"
+      // The Launcher's own shadow must paint past this small frame. The open
+      // frame clips to the gutter around the Panel.
+      iframe.style.overflow = open ? "hidden" : "visible"
+    }
+
+    sizeFrame(false)
     iframe.setAttribute("title", "Askdesk Chatbot")
     iframe.setAttribute("allow", "clipboard-write")
     iframe.setAttribute("referrerpolicy", "origin")
@@ -119,15 +141,20 @@
       })
     }
 
-    /** Closes the chat, hands over the pass, or refreshes it when the iframe asks. */
+    /** Resizes the chat, hands over the pass, or refreshes it when the iframe asks. */
     function onWidgetMessage(event) {
       if (event.origin !== baseUrl) return
       if (event.source !== iframe.contentWindow) return
       if (!event.data) return
 
+      if (event.data.type === "askdesk:open") {
+        sizeFrame(true)
+        postToFrame({ type: "askdesk:opened" })
+        return
+      }
+
       if (event.data.type === "askdesk:close") {
-        iframe.remove()
-        window.removeEventListener("message", onWidgetMessage)
+        sizeFrame(false)
         return
       }
 

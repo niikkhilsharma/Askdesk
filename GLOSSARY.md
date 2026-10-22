@@ -24,10 +24,18 @@ _Avoid_: User, customer
 A specific site address an account has named, including `https` and the host, such as `https://www.oakclinic.com`. A different subdomain, or the same host over `http`, is a different host site. The bot runs only on host sites that account has named. The same bot can have more than one host site. A page that only contains the snippet is not a host site.
 _Avoid_: Domain, embed, website, allowed origin
 
+**Launcher**:
+The closed state of the bot's single presence on a host site. A page load shows the Launcher. The visitor opens it into the Panel.
+_Avoid_: Bubble, toggle, bot icon, widget
+
+**Panel**:
+The open state of that same presence. The visitor closes it back into the Launcher. A later page load shows the Launcher again.
+_Avoid_: Widget, popup, chatbot window
+
 **Install snippet**:
 The text an account copies onto a host site to place its bot there. The snippet names the bot. It does not, by itself, allow the bot to run.
 _Avoid_: Script tag, embed code, agent id
 
 **Visitor pass**:
-A short-lived proof that the host site is on the account's list. It names the bot, that host site, and an expiry one hour out. The install snippet gives it to the widget, and the widget sends it with each question. It is not the account's login.
+A short-lived proof that the host site is on the account's list. It names the bot, that host site, and an expiry one hour out. The install snippet gives it to that presence when the host site loads it, and the Panel sends it with each question. It is not the account's login.
 _Avoid_: Session, token, API key
