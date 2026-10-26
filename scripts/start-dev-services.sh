@@ -5,6 +5,50 @@ set -euo pipefail
 DB_CONTAINER="embeded-ai-chatbot-db-1"
 LLM_CONTAINER="embeded-ai-chatbot-litellm-1"
 
+# Reads IS_USING_LITELLM from an env file. Prints nothing when the key is absent.
+read_litellm_flag() {
+  local file="$1"
+  local line value
+
+  if [[ ! -f "$file" ]]; then
+    return 1
+  fi
+
+  line="$(grep -E '^[[:space:]]*IS_USING_LITELLM=' "$file" | tail -1 || true)"
+  if [[ -z "$line" ]]; then
+    return 1
+  fi
+
+  value="${line#*=}"
+  value="${value#"${value%%[![:space:]]*}"}"
+  if [[ "$value" != \"* && "$value" != \'* ]]; then
+    value="${value%%#*}"
+  fi
+  value="${value%"${value##*[![:space:]]}"}"
+  value="${value#\"}"
+  value="${value%\"}"
+  value="${value#\'}"
+  value="${value%\'}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+# Matches Next.js: an already exported value wins, then .env.local, then .env.
+if [[ -z "${IS_USING_LITELLM+x}" ]]; then
+  if litellm_flag="$(read_litellm_flag .env.local)"; then
+    IS_USING_LITELLM="$litellm_flag"
+  elif litellm_flag="$(read_litellm_flag .env)"; then
+    IS_USING_LITELLM="$litellm_flag"
+  else
+    IS_USING_LITELLM="false"
+  fi
+fi
+
+if [[ "$IS_USING_LITELLM" != "true" ]]; then
+  echo "IS_USING_LITELLM is not true. Skipping the local LiteLLM proxy."
+  exit 0
+fi
+
 if ! docker info >/dev/null 2>&1; then
   if [[ "$(uname -s)" != "Darwin" ]]; then
     echo "Docker is not running. Start Docker, then run npm run dev again."

@@ -23,6 +23,8 @@ export default defineConfig({
         "components/landing/mock-chat-script.ts",
         "db/schema.ts",
         "lib/chat/visitor-thread.ts",
+        "lib/knowledge-base/constants.ts",
+        "lib/llm.ts",
         "lib/cloudinary.ts",
         "lib/install/bots.ts",
         "lib/install/db-error.ts",

@@ -35,7 +35,7 @@ flowchart LR
   widget --> chatApi[Chat API]
   dashboard --> chatApi
   chatApi --> pinecone
-  chatApi --> llm[LLM via LiteLLM]
+  chatApi --> llm[OpenAI or LiteLLM]
 ```
 
 ## What this repo is
@@ -73,7 +73,7 @@ PDF upload
 
 Chat
   → retrieve top matching chunks
-  → stream a grounded answer (gpt-4.1-nano via LiteLLM)
+  → stream a grounded answer (gpt-6-luna)
   → cite file name and page when an excerpt is used
 ```
 
@@ -104,12 +104,12 @@ A copied snippet does not run on a site the account has not named. On an allowed
 | Database | Neon Postgres + Drizzle |
 | Files | Cloudinary (signed PDF uploads) |
 | Search | Pinecone, one index, per-user namespaces |
-| Models | LiteLLM proxy → embeddings and chat |
+| Models | OpenAI directly, or LiteLLM when `IS_USING_LITELLM=true` |
 | RAG | LangChain ingest/retrieval + Vercel AI SDK streaming UI |
 
 ## Running locally
 
-You need Node.js, a Neon (or other Postgres) database, a Cloudinary account, a Pinecone account, and a LiteLLM proxy for chat and embeddings.
+You need Node.js, a Neon (or other Postgres) database, a Cloudinary account, a Pinecone account, and an OpenAI API key for chat and embeddings. Set `IS_USING_LITELLM=true` only when you want those calls to go through a LiteLLM proxy instead.
 
 1. Install dependencies:
 
@@ -134,6 +134,10 @@ You need Node.js, a Neon (or other Postgres) database, a Cloudinary account, a P
    PINECONE_CLOUD=aws
    PINECONE_REGION=us-east-1
 
+   OPENAI_API_KEY=
+   IS_USING_LITELLM=false
+
+   # Only when IS_USING_LITELLM=true
    LITE_LLM_VIRTUAL_KEY_1=
    LITE_LLM_BASE_URL=http://localhost:4000/v1
    ```
@@ -145,7 +149,7 @@ You need Node.js, a Neon (or other Postgres) database, a Cloudinary account, a P
    npx tsx scripts/create-pinecone-index.ts
    ```
 
-4. Start LiteLLM, then the app:
+4. Start the app. With `IS_USING_LITELLM=true`, this also starts the local LiteLLM proxy:
 
    ```bash
    npm run dev
