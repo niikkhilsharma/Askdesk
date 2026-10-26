@@ -21,11 +21,15 @@ read_litellm_flag() {
 
   value="${line#*=}"
   value="${value#"${value%%[![:space:]]*}"}"
+  if [[ "$value" != \"* && "$value" != \'* ]]; then
+    value="${value%%#*}"
+  fi
   value="${value%"${value##*[![:space:]]}"}"
   value="${value#\"}"
   value="${value%\"}"
   value="${value#\'}"
   value="${value%\'}"
+  value="${value%"${value##*[![:space:]]}"}"
   printf '%s' "$value"
 }
 
