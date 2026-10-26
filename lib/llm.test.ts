@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest"
 
-import { getLlmClientOptions } from "@/lib/llm"
+import { createChatModel, createEmbeddings, getLlmClientOptions } from "@/lib/llm"
 
 const envKeys = [
   "IS_USING_LITELLM",
@@ -77,6 +77,14 @@ describe("getLlmClientOptions", () => {
     expect(() => getLlmClientOptions()).toThrow(
       "IS_USING_LITELLM must be true or false"
     )
+  })
+
+  it("builds the chat and embeddings clients for the selected model", () => {
+    delete process.env.IS_USING_LITELLM
+    process.env.OPENAI_API_KEY = "sk-openai"
+
+    expect(createChatModel()).toMatchObject({ model: "gpt-6-luna" })
+    expect(createEmbeddings()).toMatchObject({ model: "text-embedding-3-small" })
   })
 
   it("requires the key for the selected provider", () => {
