@@ -3,8 +3,26 @@ import { createUIMessageStream } from "ai"
 
 import {
   CHAT_MODEL,
+  CHAT_MODELS,
   EMBEDDING_MODEL,
 } from "@/lib/knowledge-base/constants"
+
+const OPENAI_BASE_URL = "https://api.openai.com/v1"
+
+/** Returns whether chat and embeddings should go through the LiteLLM proxy. */
+function isUsingLiteLlm() {
+  const value = process.env.IS_USING_LITELLM?.trim()
+
+  if (value === undefined || value === "" || value === "false") {
+    return false
+  }
+
+  if (value === "true") {
+    return true
+  }
+
+  throw new Error("IS_USING_LITELLM must be true or false")
+}
 
 /** Returns the LiteLLM proxy base URL. */
 function getLiteLlmBaseUrl() {
@@ -22,31 +40,51 @@ function getLiteLlmApiKey() {
   return apiKey
 }
 
-/** Builds the shared LiteLLM client options used by chat and embeddings. */
-function getLiteLlmClientOptions() {
+/** Returns the OpenAI API key used when the LiteLLM proxy is off. */
+function getOpenAiApiKey() {
+  const apiKey = process.env.OPENAI_API_KEY
+
+  if (!apiKey) {
+    throw new Error("Missing OPENAI_API_KEY")
+  }
+
+  return apiKey
+}
+
+/** Builds the shared client options used by chat and embeddings. */
+export function getLlmClientOptions() {
+  if (isUsingLiteLlm()) {
+    return {
+      apiKey: getLiteLlmApiKey(),
+      configuration: {
+        baseURL: getLiteLlmBaseUrl(),
+      },
+    }
+  }
+
   return {
-    apiKey: getLiteLlmApiKey(),
+    apiKey: getOpenAiApiKey(),
     configuration: {
-      baseURL: getLiteLlmBaseUrl(),
+      baseURL: OPENAI_BASE_URL,
     },
   }
 }
 
-/** Creates a LiteLLM chat model for RAG answers. */
+/** Creates a chat model for RAG answers. */
 export function createChatModel() {
   return new ChatOpenAI({
     model: CHAT_MODEL,
-    temperature: 0,
+    ...CHAT_MODELS[CHAT_MODEL],
     useResponsesApi: false,
-    ...getLiteLlmClientOptions(),
+    ...getLlmClientOptions(),
   })
 }
 
-/** Creates a LiteLLM embeddings model for indexing and retrieval. */
+/** Creates an embeddings model for indexing and retrieval. */
 export function createEmbeddings() {
   return new OpenAIEmbeddings({
     model: EMBEDDING_MODEL,
-    ...getLiteLlmClientOptions(),
+    ...getLlmClientOptions(),
   })
 }
 

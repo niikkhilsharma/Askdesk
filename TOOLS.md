@@ -29,7 +29,7 @@ Short, project-specific reasons — what each tool does in this embedded AI chat
 
 - **LiteLLM** — Local OpenAI-compatible proxy so chat and embeddings share one key/base URL instead of calling providers directly.
 - **LangChain** — Chat messages, PDF chunking, and the Pinecone vector store used for ingest and retrieval.
-- **OpenAI embeddings / chat (via LiteLLM)** — `text-embedding-3-small` for indexing; `gpt-4.1-nano` for grounded answers.
+- **OpenAI embeddings / chat** — `text-embedding-3-small` for indexing; `gpt-6-luna` for grounded answers. Direct OpenAI unless `IS_USING_LITELLM=true`.
 - **Pinecone** — Per-user namespaces of document chunks; similarity search supplies RAG context in `/api/chat`.
 - **unpdf** — Extracts page-level text from uploaded PDFs before chunking.
 - **Vercel AI SDK (`ai`, `@ai-sdk/react`)** — `useChat` in the dashboard/widget and UI message streaming from the chat API.
