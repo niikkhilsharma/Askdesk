@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 
+import { DEMO_SITE } from "@/components/landing/content"
 import {
   CLINIC_PRESETS,
   CLINIC_WELCOME,
@@ -9,20 +10,31 @@ import {
   type ClinicPreset,
 } from "@/components/landing/mock-chat-script"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import AssistantMessageBubble from "@/components/widget/assistant-message-bubble"
 import UserMessageBubble from "@/components/widget/user-message-bubble"
 import WidgetInput from "@/components/widget/widget-input"
 
 const TYPING_DELAY_MS = 700
 const AUTOPLAY_START_DELAY_MS = 1400
-const AUTOPLAY_GAP_MS = 1800
-const AUTOPLAY_LOOP_DELAY_MS = 2400
+const AUTOPLAY_GAP_MS = 2200
+const AUTOPLAY_LOOP_DELAY_MS = 2800
 const AUTOPLAY_RESUME_IDLE_MS = 8000
+const AUTOPLAY_ORDER = [2, 0, 1] as const
+
+const PRESET_CITATIONS: Record<string, string> = {
+  hours: "hours.pdf · p.1",
+  walkins: "visits.pdf · p.1",
+  insurance: "pricing.pdf · p.2",
+}
 
 type ChatMessage = {
   id: string
   role: "user" | "assistant"
   text: string
+  citation?: string
+  revealed?: number
 }
 
 type TimeoutHandle = ReturnType<typeof setTimeout>
@@ -56,12 +68,17 @@ function scheduleTimeout(
   }, delayMs)
 }
 
-/** Shows a short fake-typing indicator while the canned reply is delayed. */
+/** Returns true when the visitor asked the system to reduce motion. */
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
+/** Shows a short indicator while the canned reply is delayed. */
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-2 rounded-lg p-2">
       <Avatar className="mt-1">
-        <AvatarFallback>RC</AvatarFallback>
+        <AvatarFallback>ND</AvatarFallback>
       </Avatar>
       <div className="rounded-lg bg-muted p-2">
         <p className="text-muted-foreground">Typing…</p>
@@ -70,7 +87,7 @@ function TypingIndicator() {
   )
 }
 
-/** Scripted clinic-site preview chat with canned replies and no network calls. */
+/** Scripted sample-site preview with citations, chips, and a handoff. */
 export function LandingMockChat() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES)
   const [isTyping, setIsTyping] = useState(false)
@@ -83,7 +100,7 @@ export function LandingMockChat() {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   /** Appends a user bubble, then a delayed assistant reply. */
-  function appendExchange(userText: string, reply: string) {
+  function appendExchange(userText: string, reply: string, citation?: string) {
     isTypingRef.current = true
     setIsTyping(true)
     setMessages((prev) => [
@@ -96,12 +113,15 @@ export function LandingMockChat() {
     ])
 
     scheduleTimeout(typingTimeoutRef, TYPING_DELAY_MS, () => {
+      const reduce = prefersReducedMotion()
       setMessages((prev) => [
         ...prev,
         {
           id: String(messageIdRef.current++),
           role: "assistant",
           text: reply,
+          citation,
+          revealed: reduce ? reply.length : 0,
         },
       ])
       isTypingRef.current = false
@@ -109,12 +129,12 @@ export function LandingMockChat() {
     })
   }
 
-  /** Adds a scripted visitor question and its delayed canned clinic reply. */
+  /** Adds a scripted visitor question and its delayed canned reply. */
   function playPresetExchange(preset: ClinicPreset) {
-    appendExchange(preset.question, preset.reply)
+    appendExchange(preset.question, preset.reply, PRESET_CITATIONS[preset.id])
   }
 
-  /** Restarts the preview thread at the clinic welcome message. */
+  /** Restarts the preview thread at the welcome message. */
   function resetThread() {
     clearStoredTimeout(typingTimeoutRef)
     isTypingRef.current = false
@@ -127,7 +147,7 @@ export function LandingMockChat() {
   function playAutoplayTurn(stepIndex: number) {
     if (pausedRef.current) return
 
-    if (stepIndex >= CLINIC_PRESETS.length) {
+    if (stepIndex >= AUTOPLAY_ORDER.length) {
       resetThread()
       scheduleTimeout(autoplayTimeoutRef, AUTOPLAY_START_DELAY_MS, () => {
         playAutoplayTurn(0)
@@ -135,8 +155,8 @@ export function LandingMockChat() {
       return
     }
 
-    playPresetExchange(CLINIC_PRESETS[stepIndex])
-    const isLast = stepIndex === CLINIC_PRESETS.length - 1
+    playPresetExchange(CLINIC_PRESETS[AUTOPLAY_ORDER[stepIndex]])
+    const isLast = stepIndex === AUTOPLAY_ORDER.length - 1
     const nextDelay =
       TYPING_DELAY_MS + (isLast ? AUTOPLAY_LOOP_DELAY_MS : AUTOPLAY_GAP_MS)
     scheduleTimeout(autoplayTimeoutRef, nextDelay, () => {
@@ -157,15 +177,47 @@ export function LandingMockChat() {
     })
   }
 
-  /** Shows a visitor message, replies with a canned clinic answer, and pauses autoplay. */
+  /** Shows a visitor message, replies with a canned answer, and pauses autoplay. */
   function handleUserQuestion(text: string) {
     const trimmed = text.trim()
     if (!trimmed || isTypingRef.current) return
     pauseAutoplay()
-    appendExchange(trimmed, matchClinicReply(trimmed))
+    const preset = CLINIC_PRESETS.find((item) => item.question === trimmed)
+    appendExchange(
+      trimmed,
+      matchClinicReply(trimmed),
+      preset ? PRESET_CITATIONS[preset.id] : undefined
+    )
+  }
+
+  /** Hands the sample chat to a person and pauses the script. */
+  function handleHandoff() {
+    if (isTypingRef.current) return
+    pauseAutoplay()
+    appendExchange(
+      "Can I talk to a person?",
+      "I’ve passed this chat to the front desk, with the full conversation attached. Someone from the team will join here."
+    )
   }
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      const preset = CLINIC_PRESETS[2]
+      const timeout = window.setTimeout(() => {
+        setMessages([
+          ...INITIAL_MESSAGES,
+          { id: "sample-user", role: "user", text: preset.question },
+          {
+            id: "sample-assistant",
+            role: "assistant",
+            text: preset.reply,
+            citation: PRESET_CITATIONS[preset.id],
+          },
+        ])
+      }, 0)
+      return () => window.clearTimeout(timeout)
+    }
+
     scheduleTimeout(autoplayTimeoutRef, AUTOPLAY_START_DELAY_MS, () => {
       playAutoplayTurn(0)
     })
@@ -180,57 +232,151 @@ export function LandingMockChat() {
   }, [])
 
   useEffect(() => {
+    const pending = messages.find(
+      (message) =>
+        message.role === "assistant" &&
+        message.revealed !== undefined &&
+        message.revealed < message.text.length
+    )
+    if (!pending) return
+
+    const timeout = window.setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === pending.id
+            ? {
+                ...message,
+                revealed: Math.min(
+                  message.text.length,
+                  (message.revealed ?? 0) + 3
+                ),
+              }
+            : message
+        )
+      )
+    }, 24)
+
+    return () => window.clearTimeout(timeout)
+  }, [messages])
+
+  useEffect(() => {
     const container = messagesContainerRef.current
     if (!container) return
     container.scrollTop = container.scrollHeight
   }, [messages, isTyping])
 
   return (
-    <div className="w-full max-w-md">
-      <p className="mb-2 text-sm text-muted-foreground">Clinic site preview</p>
-      <div
-        className="flex h-[28rem] flex-col overflow-hidden rounded-xl border bg-card shadow-sm"
-        role="region"
-        aria-label="Clinic site preview chatbot"
-      >
-        <div className="flex items-center justify-between border-b bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-          <span>riversideclinic.com</span>
+    <div className="w-full min-w-0">
+      <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex items-center gap-2 border-b bg-muted/50 px-3 py-2">
+          <span
+            className="size-2 rounded-full bg-muted-foreground/30"
+            aria-hidden
+          />
+          <span
+            className="size-2 rounded-full bg-muted-foreground/30"
+            aria-hidden
+          />
+          <span
+            className="size-2 rounded-full bg-muted-foreground/30"
+            aria-hidden
+          />
+          <span className="truncate text-xs text-muted-foreground">
+            {DEMO_SITE.host}
+          </span>
         </div>
-        <div className="sticky top-0 z-10 border-b bg-card">
-          <div className="flex items-center gap-2 px-2 py-4">
-            <Avatar>
-              <AvatarFallback>RC</AvatarFallback>
-            </Avatar>
-            <p className="font-medium text-card-foreground">Riverside Clinic</p>
+        <div className="relative flex flex-col gap-4 bg-muted/30 p-3 sm:block sm:min-h-[34rem] sm:p-4">
+          <div className="flex max-w-xs flex-col gap-2 sm:max-w-[46%]">
+            <p className="font-heading text-lg font-semibold">
+              {DEMO_SITE.name}
+            </p>
+            <p className="text-xs text-muted-foreground">{DEMO_SITE.note}</p>
+            <p className="text-sm text-muted-foreground">
+              Cleanings, new-patient visits, and hours — ask the chat.
+            </p>
+            <ul className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground">
+              <li className="rounded-lg bg-background/80 px-3 py-2">
+                Hours · Mon–Fri 8am–6pm
+              </li>
+              <li className="rounded-lg bg-background/80 px-3 py-2">
+                New patients welcome
+              </li>
+              <li className="rounded-lg bg-background/80 px-3 py-2">
+                Most major insurance
+              </li>
+            </ul>
+          </div>
+          <div
+            className="flex h-[28rem] w-full min-w-0 flex-col overflow-hidden rounded-xl border bg-card shadow-sm sm:absolute sm:right-3 sm:bottom-3 sm:w-[min(22rem,58%)]"
+            role="region"
+            aria-label="Northside Dental sample site with AskDesk chat"
+          >
+            <div className="flex items-center gap-2 border-b bg-card px-3 py-3">
+              <Avatar>
+                <AvatarFallback>ND</AvatarFallback>
+              </Avatar>
+              <p className="font-medium text-card-foreground">
+                {DEMO_SITE.name}
+              </p>
+            </div>
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto bg-background px-1 py-2"
+              aria-live="polite"
+            >
+              {messages.map((message) => {
+                const visible =
+                  message.revealed === undefined
+                    ? message.text
+                    : message.text.slice(0, message.revealed)
+                const showCitation =
+                  message.citation &&
+                  (message.revealed === undefined ||
+                    message.revealed >= message.text.length)
+
+                return message.role === "user" ? (
+                  <UserMessageBubble key={message.id} message={visible} />
+                ) : (
+                  <div key={message.id}>
+                    <AssistantMessageBubble message={visible} />
+                    {showCitation ? (
+                      <div className="ps-12">
+                        <Badge variant="outline">{message.citation}</Badge>
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
+              {isTyping ? <TypingIndicator /> : null}
+            </div>
+            <div className="flex flex-wrap gap-2 border-t px-3 py-2">
+              {CLINIC_PRESETS.map((preset) => (
+                <Button
+                  key={preset.id}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleUserQuestion(preset.question)}
+                >
+                  {preset.question}
+                </Button>
+              ))}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleHandoff}
+              >
+                Talk to a person
+              </Button>
+            </div>
+            <WidgetInput
+              disabled={isTyping}
+              sendMessage={({ text }) => handleUserQuestion(text)}
+              className="shrink-0"
+            />
           </div>
         </div>
-        <div
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto bg-background px-2 py-4"
-          aria-live="polite"
-        >
-          <p className="text-center text-sm text-muted-foreground">
-            Today, 2:24pm
-          </p>
-          <div className="my-2">
-            {messages.map((message) =>
-              message.role === "user" ? (
-                <UserMessageBubble key={message.id} message={message.text} />
-              ) : (
-                <AssistantMessageBubble
-                  key={message.id}
-                  message={message.text}
-                />
-              )
-            )}
-            {isTyping ? <TypingIndicator /> : null}
-          </div>
-        </div>
-        <WidgetInput
-          disabled={isTyping}
-          sendMessage={({ text }) => handleUserQuestion(text)}
-          className="shrink-0"
-        />
       </div>
     </div>
   )

@@ -1,27 +1,56 @@
-import { LandingSection } from "@/components/landing/landing-section"
+import { Check, Minus } from "lucide-react"
 
-const CONTRAST_NOTS = [
-  "Not a generic ChatGPT tab.",
-  "Not a 6-week custom build.",
-  "Not a heavy support suite.",
-]
+import { CONTRAST } from "@/components/landing/content"
+import {
+  LandingHeading,
+  LandingSection,
+} from "@/components/landing/landing-section"
 
-/** Positions Askdesk against generic chat, custom builds, and heavy suites. */
+/** Side-by-side of the inbox problem and the on-site outcome. */
 export function LandingContrast() {
   return (
-    <LandingSection className="bg-muted/40">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="font-heading text-3xl font-semibold tracking-tight">
-          Built for your site, not a chat tab
-        </h2>
-        <ul className="mt-8 space-y-3 text-lg text-muted-foreground">
-          {CONTRAST_NOTS.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-        <p className="mt-8 text-xl font-medium">
-          A chatbot on <em>their</em> site, for <em>their</em> customers.
-        </p>
+    <LandingSection titleId="contrast-title">
+      <LandingHeading
+        id="contrast-title"
+        title={CONTRAST.title}
+        subtitle={CONTRAST.subtitle}
+      />
+      <div className="mt-12 grid gap-4 md:grid-cols-2">
+        <article className="flex flex-col gap-4 rounded-2xl border bg-card p-6 shadow-sm">
+          <h3 className="font-heading text-xl font-semibold">
+            {CONTRAST.without.title}
+          </h3>
+          <ul className="flex flex-col gap-3">
+            {CONTRAST.without.items.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-3 text-sm leading-relaxed"
+              >
+                <Minus
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  aria-hidden
+                />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+        <article className="flex flex-col gap-4 rounded-2xl border bg-card p-6 shadow-sm">
+          <h3 className="font-heading text-xl font-semibold">
+            {CONTRAST.with.title}
+          </h3>
+          <ul className="flex flex-col gap-3">
+            {CONTRAST.with.items.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-3 text-sm leading-relaxed"
+              >
+                <Check className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
       </div>
     </LandingSection>
   )
