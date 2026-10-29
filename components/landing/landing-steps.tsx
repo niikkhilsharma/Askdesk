@@ -1,4 +1,4 @@
-import { INSTALL_SNIPPET, STEPS } from "@/components/landing/content"
+import { STEPS } from "@/components/landing/content"
 import { LandingCopyButton } from "@/components/landing/landing-copy-button"
 import {
   LandingHeading,
@@ -6,6 +6,8 @@ import {
 } from "@/components/landing/landing-section"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { buildInstallSnippet } from "@/lib/install/snippet"
+import { siteUrl } from "@/lib/site-url"
 
 /** Three setup steps, each with a small coded preview. */
 export function LandingSteps() {
@@ -68,14 +70,16 @@ function BrandMock() {
   )
 }
 
-/** Install snippet with a button that copies it. */
+/** Install snippet with a button that copies the real widget tag. */
 function SnippetMock() {
+  const snippet = buildInstallSnippet(siteUrl(), "your-bot-id")
+
   return (
     <div className="mt-auto flex flex-col gap-3">
       <pre className="overflow-x-auto rounded-xl bg-muted p-3 font-mono text-xs leading-relaxed text-foreground">
-        <code>{INSTALL_SNIPPET}</code>
+        <code>{snippet}</code>
       </pre>
-      <LandingCopyButton text={INSTALL_SNIPPET} />
+      <LandingCopyButton text={snippet} />
     </div>
   )
 }

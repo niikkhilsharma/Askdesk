@@ -168,6 +168,9 @@ export function LandingMockChat() {
   function pauseAutoplay() {
     pausedRef.current = true
     clearStoredTimeout(autoplayTimeoutRef)
+    clearStoredTimeout(resumeTimeoutRef)
+    if (prefersReducedMotion()) return
+
     scheduleTimeout(resumeTimeoutRef, AUTOPLAY_RESUME_IDLE_MS, () => {
       pausedRef.current = false
       resetThread()

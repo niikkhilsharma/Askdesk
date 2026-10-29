@@ -10,11 +10,6 @@ export const SITE_DESCRIPTION =
 
 export const PLACEHOLDER_SALES_EMAIL = "hello@example.com"
 
-export const INSTALL_SNIPPET = `<script
-  src="https://askdesk.example/widget.js"
-  data-bot="your-bot"
-></script>`
-
 export const NAV_LINKS = [
   { href: "#features", label: "Product" },
   { href: "#integrations", label: "Integrations" },
@@ -90,11 +85,11 @@ export const STEPS = [
     id: "snippet",
     number: "3",
     title: "Paste one snippet",
-    body: "Copy a single script tag into your site, or install it on WordPress, Shopify, Webflow or Wix. You’re live.",
+    body: "Copy the script tag from your install page, or add AskDesk on WordPress, Shopify, Webflow or Wix. You’re live.",
   },
 ] as const
 
-export const FEATURES = [
+const FEATURE_LEAD = [
   {
     id: "sources",
     title: "Answers with sources",
@@ -107,6 +102,9 @@ export const FEATURES = [
     body: "One tap hands the chat to your team in a shared inbox, with the whole conversation attached.",
     large: true,
   },
+] as const
+
+const FEATURE_KNOWLEDGE = [
   {
     id: "trained",
     title: "Trained on your content",
@@ -119,6 +117,9 @@ export const FEATURES = [
     body: "Re-crawls your site on a schedule, so a changed price is never out of date.",
     large: false,
   },
+] as const
+
+const FEATURE_CAPTURE = [
   {
     id: "leads",
     title: "Lead capture",
@@ -131,6 +132,9 @@ export const FEATURES = [
     body: "Book appointments, create support tickets, look up orders, and trigger webhooks or custom API calls.",
     large: false,
   },
+] as const
+
+const FEATURE_VOICE = [
   {
     id: "languages",
     title: "Multilingual",
@@ -143,6 +147,9 @@ export const FEATURES = [
     body: "Fix a reply once and AskDesk remembers it everywhere.",
     large: false,
   },
+] as const
+
+const FEATURE_GUIDANCE = [
   {
     id: "models",
     title: "Choice of AI models",
@@ -155,6 +162,14 @@ export const FEATURES = [
     body: "Starter questions and follow-up chips guide visitors to answers faster.",
     large: false,
   },
+] as const
+
+export const FEATURES = [
+  ...FEATURE_LEAD,
+  ...FEATURE_KNOWLEDGE,
+  ...FEATURE_CAPTURE,
+  ...FEATURE_VOICE,
+  ...FEATURE_GUIDANCE,
 ] as const
 
 export const DATA_SOURCES = [
@@ -229,7 +244,7 @@ export const INTEGRATION_GROUPS = [
 
 export const INTEGRATION_FOOTNOTE = "Thousands more apps via Zapier and Make."
 
-export const USE_CASES = [
+const USE_CASES_LOCAL = [
   {
     id: "clinics",
     label: "Clinics",
@@ -258,6 +273,9 @@ export const USE_CASES = [
     reply:
       "The next cohort starts on the first Monday of the month. Tuition and who it’s for are both on the course page, and I can point you to the exact section.",
   },
+] as const
+
+const USE_CASES_GUEST = [
   {
     id: "hospitality",
     label: "Hospitality",
@@ -286,6 +304,9 @@ export const USE_CASES = [
     reply:
       "Orders placed before 2pm ship the same weekday. Returns are accepted within 30 days, and the size guide is linked on the product page.",
   },
+] as const
+
+const USE_CASES_TEAMS = [
   {
     id: "saas",
     label: "SaaS",
@@ -314,6 +335,12 @@ export const USE_CASES = [
     reply:
       "Each client gets their own chatbot, knowledge base, and domain list. Branding can be removed, and your team can run them from one account.",
   },
+] as const
+
+export const USE_CASES = [
+  ...USE_CASES_LOCAL,
+  ...USE_CASES_GUEST,
+  ...USE_CASES_TEAMS,
 ] as const
 
 export const BRANDING_POINTS = [
@@ -465,7 +492,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
 ]
 
-export const COMPARISON_ROWS: {
+const COMPARISON_SCALE: {
   label: string
   values: Record<PricingPlanId, string>
 }[] = [
@@ -482,6 +509,12 @@ export const COMPARISON_ROWS: {
       business: "Custom",
     },
   },
+]
+
+const COMPARISON_TRAINING: {
+  label: string
+  values: Record<PricingPlanId, string>
+}[] = [
   {
     label: "Training",
     values: {
@@ -500,6 +533,12 @@ export const COMPARISON_ROWS: {
       business: "On demand",
     },
   },
+]
+
+const COMPARISON_CAPTURE: {
+  label: string
+  values: Record<PricingPlanId, string>
+}[] = [
   {
     label: "Lead capture",
     values: { free: "No", standard: "Yes", pro: "Yes", business: "Yes" },
@@ -508,6 +547,12 @@ export const COMPARISON_ROWS: {
     label: "Integrations",
     values: { free: "No", standard: "Yes", pro: "Yes", business: "Yes" },
   },
+]
+
+const COMPARISON_TEAM: {
+  label: string
+  values: Record<PricingPlanId, string>
+}[] = [
   {
     label: "Human handoff",
     values: { free: "No", standard: "No", pro: "Yes", business: "Yes" },
@@ -516,6 +561,12 @@ export const COMPARISON_ROWS: {
     label: "Actions",
     values: { free: "No", standard: "No", pro: "Yes", business: "Yes" },
   },
+]
+
+const COMPARISON_INSIGHT: {
+  label: string
+  values: Record<PricingPlanId, string>
+}[] = [
   {
     label: "Analytics",
     values: { free: "No", standard: "No", pro: "Yes", business: "Yes" },
@@ -524,6 +575,12 @@ export const COMPARISON_ROWS: {
     label: "Remove branding",
     values: { free: "No", standard: "No", pro: "Yes", business: "Yes" },
   },
+]
+
+const COMPARISON_PLATFORM: {
+  label: string
+  values: Record<PricingPlanId, string>
+}[] = [
   {
     label: "API and webhooks",
     values: { free: "No", standard: "No", pro: "No", business: "Yes" },
@@ -536,6 +593,15 @@ export const COMPARISON_ROWS: {
     label: "SSO",
     values: { free: "No", standard: "No", pro: "No", business: "Yes" },
   },
+]
+
+export const COMPARISON_ROWS = [
+  ...COMPARISON_SCALE,
+  ...COMPARISON_TRAINING,
+  ...COMPARISON_CAPTURE,
+  ...COMPARISON_TEAM,
+  ...COMPARISON_INSIGHT,
+  ...COMPARISON_PLATFORM,
 ]
 
 export const FAQ_ITEMS = [
@@ -617,7 +683,7 @@ export const FOOTER_COLUMNS = [
       { label: "Features", href: "#features" },
       { label: "Integrations", href: "#integrations" },
       { label: "Pricing", href: "#pricing" },
-      { label: "Changelog", href: "#changelog" },
+      { label: "FAQ", href: "#faq" },
     ],
   },
   {
@@ -627,24 +693,6 @@ export const FOOTER_COLUMNS = [
       { label: "Courses", href: "#use-cases" },
       { label: "Hospitality", href: "#use-cases" },
       { label: "Agencies", href: "#use-cases" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Docs", href: "#docs" },
-      { label: "Help center", href: "#help" },
-      { label: "API", href: "#api" },
-      { label: "Blog", href: "#blog" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", href: "#about" },
-      { label: "Contact", href: "#contact" },
-      { label: "Privacy", href: "#privacy" },
-      { label: "Terms", href: "#terms" },
     ],
   },
 ] as const
