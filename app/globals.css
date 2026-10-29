@@ -126,6 +126,16 @@
     }
   html {
     @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+    }
+  a,
+  button {
+    touch-action: manipulation;
+    }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+      }
     }
   html:has(.askdesk-widget),
   html:has(.askdesk-widget) body {

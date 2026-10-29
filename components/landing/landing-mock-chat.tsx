@@ -166,6 +166,9 @@ export function LandingMockChat() {
   }
 
   useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)")
+    if (media.matches) return
+
     scheduleTimeout(autoplayTimeoutRef, AUTOPLAY_START_DELAY_MS, () => {
       playAutoplayTurn(0)
     })
@@ -187,11 +190,13 @@ export function LandingMockChat() {
 
   return (
     <div className="w-full max-w-md">
-      <p className="mb-2 text-sm text-muted-foreground">Clinic site preview</p>
+      <p className="mb-2 text-sm text-muted-foreground">
+        Scripted preview on a clinic site. Try hours, walk-ins, or insurance.
+      </p>
       <div
-        className="flex h-[28rem] flex-col overflow-hidden rounded-xl border bg-card shadow-sm"
+        className="flex h-[28rem] max-h-[70svh] flex-col overflow-hidden rounded-xl border bg-card shadow-sm"
         role="region"
-        aria-label="Clinic site preview chatbot"
+        aria-label="Scripted clinic site preview"
       >
         <div className="flex items-center justify-between border-b bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
           <span>riversideclinic.com</span>
