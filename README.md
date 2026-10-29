@@ -169,5 +169,5 @@ npm test
 
 The core loop — account, PDF knowledge base, grounded chat — works for the owner, and visitors on an allowed host site can ask the same documents. Still to build for the public product:
 
-- Paid plan (Standard is on the landing page as coming soon)
+- Billing (the landing page invites people to start free; there is no checkout in the app)
 - More than PDFs, plus caching and load testing as traffic grows

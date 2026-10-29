@@ -20,6 +20,7 @@ export default defineConfig({
         "app/api/auth/register/route.ts",
         "app/api/widget/chat/route.ts",
         "app/api/widget/placement/route.ts",
+        "components/landing/landing-links.ts",
         "components/landing/mock-chat-script.ts",
         "db/schema.ts",
         "lib/chat/visitor-thread.ts",

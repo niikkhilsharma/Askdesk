@@ -1,51 +1,64 @@
-import { FileText, Globe, MessageCircle } from "lucide-react"
+import { Library, Paintbrush, SquareCode } from "lucide-react"
 
-import { LandingSection } from "@/components/landing/landing-section"
+import {
+  LandingSection,
+  LandingSectionIntro,
+} from "@/components/landing/landing-section"
 
 const STEPS = [
   {
-    number: "1",
-    title: "Add the chatbot to your site",
-    icon: Globe,
+    number: "01",
+    title: "Add what you already know",
+    body: "Upload PDFs, crawl your website, or connect Notion and Google Drive. Paste a page of text, or write the questions you want answered a certain way. That becomes the knowledge base for your account.",
+    icon: Library,
   },
   {
-    number: "2",
-    title: "Train it with your files",
-    icon: FileText,
+    number: "02",
+    title: "Make it sound like you",
+    body: "Set the name, the colors, and the welcome line. Ask it questions in the dashboard until the replies are the ones you would send yourself.",
+    icon: Paintbrush,
   },
   {
-    number: "3",
-    title: "Your customers get answers",
-    icon: MessageCircle,
+    number: "03",
+    title: "Put it where visitors are",
+    body: "Copy the install snippet and name each host site. The launcher shows up there. The same bot can also answer in Slack, WhatsApp, Shopify, WordPress, and Zapier.",
+    icon: SquareCode,
   },
 ]
 
-/** Three-step overview of how Askdesk is added and used. */
+/** Three-step overview of adding knowledge, shaping the bot, and placing it. */
 export function LandingSteps() {
   return (
-    <LandingSection className="bg-muted/40">
-      <h2 className="text-center font-heading text-3xl font-semibold tracking-tight">
-        How it works
-      </h2>
-      <ol className="mt-12 grid gap-8 md:grid-cols-3">
+    <LandingSection
+      id="how-it-works"
+      labelledBy="how-it-works-title"
+      className="bg-muted/40"
+    >
+      <LandingSectionIntro id="how-it-works-title" title="How it works">
+        Add your knowledge, shape the bot, then place it on the sites you name.
+      </LandingSectionIntro>
+      <ol className="mt-12 grid gap-4 md:grid-cols-3">
         {STEPS.map((step) => {
           const Icon = step.icon
           return (
             <li
               key={step.number}
-              className="flex flex-row items-start gap-4 md:flex-col"
+              className="flex flex-col gap-4 rounded-2xl border bg-card p-6"
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Icon className="size-5" aria-hidden />
-              </div>
-              <div className="flex min-w-0 flex-col gap-1 md:gap-4">
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Icon className="size-5" aria-hidden />
+                </div>
+                <p className="font-heading text-sm font-medium text-muted-foreground">
                   Step {step.number}
                 </p>
-                <h3 className="font-heading text-xl font-semibold">
-                  {step.title}
-                </h3>
               </div>
+              <h3 className="font-heading text-xl font-semibold">
+                {step.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {step.body}
+              </p>
             </li>
           )
         })}
