@@ -1,10 +1,16 @@
 import { Geist_Mono, Outfit, Raleway } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { siteUrl } from "@/lib/site-url"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
+}
 
 const ralewayHeading = Raleway({
   subsets: ["latin"],
@@ -37,9 +43,7 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <TooltipProvider>
-            <main>{children}</main>
-          </TooltipProvider>
+          <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
         </ThemeProvider>
       </body>
