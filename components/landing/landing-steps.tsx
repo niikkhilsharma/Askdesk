@@ -1,55 +1,85 @@
-import { FileText, Globe, MessageCircle } from "lucide-react"
+import { STEPS } from "@/components/landing/content"
+import { LandingCopyButton } from "@/components/landing/landing-copy-button"
+import {
+  LandingHeading,
+  LandingSection,
+} from "@/components/landing/landing-section"
+import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
+import { buildInstallSnippet } from "@/lib/install/snippet"
+import { siteUrl } from "@/lib/site-url"
 
-import { LandingSection } from "@/components/landing/landing-section"
-
-const STEPS = [
-  {
-    number: "1",
-    title: "Add the chatbot to your site",
-    icon: Globe,
-  },
-  {
-    number: "2",
-    title: "Train it with your files",
-    icon: FileText,
-  },
-  {
-    number: "3",
-    title: "Your customers get answers",
-    icon: MessageCircle,
-  },
-]
-
-/** Three-step overview of how Askdesk is added and used. */
+/** Three setup steps, each with a small coded preview. */
 export function LandingSteps() {
   return (
-    <LandingSection className="bg-muted/40">
-      <h2 className="text-center font-heading text-3xl font-semibold tracking-tight">
-        How it works
-      </h2>
-      <ol className="mt-12 grid gap-8 md:grid-cols-3">
-        {STEPS.map((step) => {
-          const Icon = step.icon
-          return (
-            <li
-              key={step.number}
-              className="flex flex-row items-start gap-4 md:flex-col"
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Icon className="size-5" aria-hidden />
-              </div>
-              <div className="flex min-w-0 flex-col gap-1 md:gap-4">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Step {step.number}
-                </p>
-                <h3 className="font-heading text-xl font-semibold">
-                  {step.title}
-                </h3>
-              </div>
-            </li>
-          )
-        })}
+    <LandingSection muted titleId="steps-title">
+      <LandingHeading
+        id="steps-title"
+        title="Live on your site in three steps"
+      />
+      <ol className="mt-12 grid gap-4 lg:grid-cols-3">
+        {STEPS.map((step) => (
+          <li
+            key={step.id}
+            className="landing-rise flex min-w-0 flex-col gap-4 rounded-2xl border bg-card p-6 shadow-sm"
+          >
+            <p className="text-sm font-medium text-muted-foreground">
+              Step {step.number}
+            </p>
+            <h3 className="font-heading text-xl font-semibold">{step.title}</h3>
+            <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+              {step.body}
+            </p>
+            {step.id === "knowledge" ? <KnowledgeMock /> : null}
+            {step.id === "brand" ? <BrandMock /> : null}
+            {step.id === "snippet" ? <SnippetMock /> : null}
+          </li>
+        ))}
       </ol>
     </LandingSection>
+  )
+}
+
+/** Static preview of a site URL being read. */
+function KnowledgeMock() {
+  return (
+    <div className="mt-auto flex flex-col gap-3 rounded-xl border bg-background p-3">
+      <label className="text-xs text-muted-foreground" htmlFor="sample-url">
+        Website URL
+      </label>
+      <Input
+        id="sample-url"
+        readOnly
+        value="https://northsidedental.example"
+        aria-label="Sample website URL"
+      />
+      <Progress value={72} aria-label="Sample crawl, 72 percent" />
+    </div>
+  )
+}
+
+/** Static colour dots standing in for the theme picker. */
+function BrandMock() {
+  return (
+    <div className="mt-auto flex items-center gap-3 rounded-xl border bg-background p-3">
+      <span className="size-8 rounded-full bg-primary" aria-hidden />
+      <span className="size-8 rounded-full bg-chart-2" aria-hidden />
+      <span className="size-8 rounded-full bg-chart-4" aria-hidden />
+      <span className="text-sm text-muted-foreground">Greeting and tone</span>
+    </div>
+  )
+}
+
+/** Install snippet with a button that copies the real widget tag. */
+function SnippetMock() {
+  const snippet = buildInstallSnippet(siteUrl(), "your-bot-id")
+
+  return (
+    <div className="mt-auto flex flex-col gap-3">
+      <pre className="overflow-x-auto rounded-xl bg-muted p-3 font-mono text-xs leading-relaxed text-foreground">
+        <code>{snippet}</code>
+      </pre>
+      <LandingCopyButton text={snippet} />
+    </div>
   )
 }

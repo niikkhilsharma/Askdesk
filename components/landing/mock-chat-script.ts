@@ -41,7 +41,7 @@ export const DEMO_FALLBACK =
   "This preview is a demo — add the chatbot to your site to answer your customers."
 
 export const CLINIC_WELCOME =
-  "Hi — welcome to Riverside Clinic. How can we help today?"
+  "Hi — welcome to Northside Dental. How can we help today?"
 
 /** Lowercases text and strips punctuation so question matching stays simple. */
 function normalizeQuestion(text: string) {

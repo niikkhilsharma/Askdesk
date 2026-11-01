@@ -1,58 +1,66 @@
-import { Building2, GraduationCap, HeartPulse, Laptop } from "lucide-react"
+"use client"
 
-import { LandingSection } from "@/components/landing/landing-section"
+import { USE_CASES } from "@/components/landing/content"
+import {
+  LandingHeading,
+  LandingSection,
+} from "@/components/landing/landing-section"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const AUDIENCES = [
-  {
-    title: "Clinics and professional services",
-    customerAsks: "Their patients ask about hours, insurance, and services.",
-    icon: HeartPulse,
-  },
-  {
-    title: "Courses and coaching",
-    customerAsks: "Their students ask about fees, schedule, and eligibility.",
-    icon: GraduationCap,
-  },
-  {
-    title: "Hotels, gyms, spas",
-    customerAsks: "Their guests ask about rates, amenities, and house rules.",
-    icon: Building2,
-  },
-  {
-    title: "Small SaaS",
-    customerAsks: "Their users ask about setup, pricing, and troubleshooting.",
-    icon: Laptop,
-  },
-]
-
-/** Audience cards framed around what each buyer's customers ask. */
+/** Tabs of sample businesses and the questions their customers ask. */
 export function LandingAudiences() {
   return (
-    <LandingSection>
-      <h2 className="text-center font-heading text-3xl font-semibold tracking-tight">
-        Who it is for
-      </h2>
-      <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {AUDIENCES.map((audience) => {
-          const Icon = audience.icon
-          return (
-            <li
-              key={audience.title}
-              className="flex flex-col gap-4 rounded-xl border bg-card p-6"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
-                <Icon className="size-5" aria-hidden />
+    <LandingSection muted id="use-cases" titleId="use-cases-title">
+      <LandingHeading
+        id="use-cases-title"
+        title="Built for businesses that get asked a lot"
+      />
+      <Tabs defaultValue={USE_CASES[0].id} className="mt-12 min-w-0">
+        <div className="max-w-full overflow-x-auto">
+          <TabsList className="w-max">
+            {USE_CASES.map((useCase) => (
+              <TabsTrigger key={useCase.id} value={useCase.id}>
+                {useCase.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+        {USE_CASES.map((useCase) => (
+          <TabsContent key={useCase.id} value={useCase.id} className="mt-6">
+            <div className="grid items-start gap-6 lg:grid-cols-2">
+              <div className="flex flex-col gap-4">
+                <h3 className="font-heading text-xl font-semibold">
+                  {useCase.title}
+                </h3>
+                <p className="max-w-prose text-sm leading-relaxed text-pretty text-muted-foreground">
+                  {useCase.description}
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {useCase.questions.map((question) => (
+                    <li
+                      key={question}
+                      className="rounded-full border bg-card px-3 py-1.5 text-sm"
+                    >
+                      {question}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <h3 className="font-heading text-lg font-semibold">
-                {audience.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {audience.customerAsks}
-              </p>
-            </li>
-          )
-        })}
-      </ul>
+              <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm">
+                <p className="text-sm font-medium">{useCase.title}</p>
+                <div className="flex justify-end">
+                  <p className="max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
+                    {useCase.questions[0]}
+                  </p>
+                </div>
+                <p className="max-w-[90%] rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed">
+                  {useCase.reply}
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </LandingSection>
   )
 }
