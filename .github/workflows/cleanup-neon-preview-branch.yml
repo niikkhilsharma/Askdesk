@@ -1,0 +1,51 @@
+name: Cleanup Neon preview branch
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-branch:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      HEAD_REF: ${{ github.head_ref }}
+    steps:
+      - name: Delete the preview branch
+        run: |
+          node <<'EOF'
+          const apiKey = process.env.NEON_API_KEY;
+          const projectId = process.env.NEON_PROJECT_ID;
+          const branchName = `preview/${process.env.HEAD_REF}`;
+          const headers = {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/json",
+          };
+          const base = `https://console.neon.tech/api/v2/projects/${encodeURIComponent(projectId)}/branches`;
+
+          const list = await fetch(`${base}?limit=100`, { headers });
+          if (!list.ok) {
+            console.error(`Could not list branches (${list.status}).`);
+            process.exit(1);
+          }
+
+          const body = await list.json();
+          const branch = (body.branches ?? []).find((item) => item.name === branchName);
+          if (!branch) {
+            console.log(`No Neon branch named ${branchName}. Nothing to delete.`);
+            process.exit(0);
+          }
+
+          const deleted = await fetch(`${base}/${branch.id}`, {
+            method: "DELETE",
+            headers,
+          });
+          if (!deleted.ok) {
+            console.error(`Could not delete ${branchName} (${deleted.status}).`);
+            process.exit(1);
+          }
+
+          console.log(`Deleted ${branchName}.`);
+          EOF
