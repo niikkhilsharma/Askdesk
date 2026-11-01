@@ -21,7 +21,6 @@ import { LandingIntegrations } from "@/components/landing/landing-integrations"
 import { LandingJsonLd } from "@/components/landing/landing-json-ld"
 import { LandingPricing } from "@/components/landing/landing-pricing"
 import { LandingSecurity } from "@/components/landing/landing-security"
-import { LandingSocialProof } from "@/components/landing/landing-social-proof"
 import { LandingSources } from "@/components/landing/landing-sources"
 import { LandingSteps } from "@/components/landing/landing-steps"
 import { siteUrl } from "@/lib/site-url"
@@ -72,7 +71,6 @@ export default async function Page() {
       <LandingHeader isAuthenticated={isAuthenticated} />
       <main id="content">
         <LandingHero isAuthenticated={isAuthenticated} />
-        <LandingSocialProof />
         <LandingContrast />
         <LandingSteps />
         <LandingFeatures />

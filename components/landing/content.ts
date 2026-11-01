@@ -1,4 +1,4 @@
-// TODO: replace prices, limits, the sales address, logos, and sample analytics with live data.
+// TODO: replace prices, limits, the sales address, and sample analytics with live data.
 
 export const SITE_NAME = "AskDesk"
 
@@ -33,18 +33,6 @@ export const DEMO_SITE = {
   note: "Sample",
   host: "northsidedental.example",
 } as const
-
-export const SOCIAL_PROOF =
-  "Small businesses and growing teams use AskDesk to answer the questions they used to email back."
-
-export const PLACEHOLDER_LOGOS = [
-  { id: "logo-1", label: "Your logo here" },
-  { id: "logo-2", label: "Your logo here" },
-  { id: "logo-3", label: "Your logo here" },
-  { id: "logo-4", label: "Your logo here" },
-  { id: "logo-5", label: "Your logo here" },
-  { id: "logo-6", label: "Your logo here" },
-] as const
 
 export const CONTRAST = {
   title: "Stop answering the same email twice.",
