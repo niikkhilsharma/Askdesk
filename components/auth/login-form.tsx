@@ -54,7 +54,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
               name="email"
               type="email"
               placeholder="m@example.com"
-              defaultValue="niikkhilsharma"
+              defaultValue="niikkhilsharma@gmail.com"
               required
             />
           </Field>
