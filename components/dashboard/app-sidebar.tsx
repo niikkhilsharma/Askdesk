@@ -4,7 +4,6 @@ import {
   BookOpen,
   Code,
   Command,
-  Home,
   MessageSquare,
   PanelLeft,
   Settings,
@@ -29,11 +28,12 @@ import {
 } from "@/components/ui/sidebar"
 
 const items = [
-  {
-    title: "Home",
-    url: "/dashboard",
-    icon: Home,
-  },
+  // Home route is unused. Signed-in users land on Install.
+  // {
+  //   title: "Home",
+  //   url: "/dashboard",
+  //   icon: Home,
+  // },
   {
     title: "Install",
     url: "/dashboard/install",
@@ -74,7 +74,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
+              <Link href="/dashboard/install">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>

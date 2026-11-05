@@ -128,7 +128,7 @@ export function LandingPricing({
   )
 }
 
-/** Signup, dashboard, or sales link for one plan. */
+/** Signup, install, or sales link for one plan. */
 function PlanCta({
   kind,
   highlighted,
@@ -152,7 +152,7 @@ function PlanCta({
       className="w-full"
       asChild
     >
-      <Link href={isAuthenticated ? "/dashboard" : "/signup"}>
+      <Link href={isAuthenticated ? "/dashboard/install" : "/signup"}>
         {isAuthenticated ? "Go to dashboard" : "Get started"}
       </Link>
     </Button>
