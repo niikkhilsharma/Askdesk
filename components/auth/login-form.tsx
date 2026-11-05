@@ -54,6 +54,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
               name="email"
               type="email"
               placeholder="m@example.com"
+              defaultValue="niikkhilsharma"
               required
             />
           </Field>
@@ -67,7 +68,13 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
                 Forgot your password?
               </a>
             </div>
-            <Input id="password" name="password" type="password" required />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              defaultValue="nikhil@12"
+              required
+            />
           </Field>
           <Field>
             <Button type="submit">Login</Button>
