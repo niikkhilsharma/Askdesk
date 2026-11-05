@@ -24,7 +24,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
             await signIn("credentials", {
               email: formData.get("email"),
               password: formData.get("password"),
-              redirectTo: "/",
+              redirectTo: "/dashboard/install",
             })
           } catch (error) {
             if (error instanceof AuthError) {

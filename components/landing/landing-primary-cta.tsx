@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-/** Links to the dashboard when signed in, or signup when not. */
+/** Links to install when signed in, or signup when not. */
 export function LandingPrimaryCta({
   isAuthenticated,
   size = "default",
@@ -17,7 +17,7 @@ export function LandingPrimaryCta({
 }) {
   return (
     <Button size={size} className={cn(className)} asChild>
-      <Link href={isAuthenticated ? "/dashboard" : "/signup"}>
+      <Link href={isAuthenticated ? "/dashboard/install" : "/signup"}>
         {isAuthenticated ? "Go to dashboard" : loggedOutLabel}
       </Link>
     </Button>
